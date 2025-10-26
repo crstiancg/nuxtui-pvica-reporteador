@@ -38,7 +38,7 @@ useSeoMeta({
 
       <template #right>
         <UColorModeButton />
-
+        <ThemePanel />
         <UButton
           to="https://github.com/nuxt-ui-templates/starter"
           target="_blank"

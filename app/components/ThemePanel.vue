@@ -113,16 +113,17 @@ function setColorMode(mode: 'light' | 'dark' | 'system') {
         <div class="mb-4">
           <p class="text-xs font-semibold mb-3">Primary Color</p>
           <div class="grid grid-cols-3 gap-2">
-            <UButton v-for="col in colors"
+            <button v-for="col in colors"
               :key="col.name"
               variant="outline"
-              :color="selectedColor === col.name ? col.name : 'neutral'"
+              class="px-4 py-2 rounded-lg border text-xs font-medium flex items-center gap-2"
+              :color='selectedColor === col.name ? col.name : "neutral"'
               @click="selectedColor = col.name">
               <span class="inline-block w-2 h-2 rounded-full"
                 :style="{ backgroundColor: `rgb(${col.rgb})` }"
               ></span>
               <span class="truncate">{{ col.name }}</span>
-            </UButton>
+            </button>
             <!-- <button
               v-for="col in colors"
               :key="col.name"

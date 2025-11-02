@@ -41,7 +41,7 @@ const providers = [{
 
 async function onSubmit(payload: FormSubmitEvent<LoginSchemaType>) {
   try {
-    console.log('Submitted', payload)
+    // console.log('Submitted', payload)
 
     const response = await $fetch('/api/login', {
       method: 'POST',

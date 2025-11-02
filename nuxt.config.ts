@@ -19,6 +19,13 @@ export default defineNuxtConfig({
     '/': { prerender: true }
   },
 
+  runtimeConfig: {
+    apiSecret: "", // The private keys which are only available server-side
+    public: {
+      baseApi: "", // Keys within public are also exposed client-side
+    },
+  },
+
   compatibilityDate: '2025-01-15',
 
   eslint: {

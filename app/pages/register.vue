@@ -1,12 +1,8 @@
 <script setup lang="ts">
-import type { LoginSchemaType } from "#shared/zod/login.schema";
-import { loginSchema } from "#shared/zod/login.schema";
 import type { AuthFormField, FormSubmitEvent } from "@nuxt/ui";
-
-const { user, loggedIn, fetch: refreshSession } = useUserSession();
+import * as z from "zod";
 
 const toast = useToast();
-const serverError = ref<string | undefined>(undefined);
 
 const fields: AuthFormField[] = [
   {
@@ -15,7 +11,6 @@ const fields: AuthFormField[] = [
     label: "Correo",
     placeholder: "Introduce tu correo",
     required: true,
-    defaultValue: "password@gmail.com",
   },
   {
     name: "password",
@@ -23,7 +18,6 @@ const fields: AuthFormField[] = [
     type: "password",
     placeholder: "Introduce tu contraseña",
     required: true,
-    defaultValue: "password",
   },
   {
     name: "remember",
@@ -49,54 +43,37 @@ const providers = [
   },
 ];
 
-async function onSubmit(payload: FormSubmitEvent<LoginSchemaType>) {
-  try {
-    serverError.value = undefined;
+const schema = z.object({
+  email: z.email("Email no valido"),
+  password: z
+    .string("La contraseña es obligatoria")
+    .min(6, "Debe tener al menos 6 caracteres"),
+});
 
-    const response = await $fetch("/api/login", {
-      method: "POST",
-      body: {
-        email: payload.data.email,
-        password: payload.data.password,
-      },
-    });
-    toast.add({ title: "Success", description: "Login successful" });
-    console.log({ response });
-    await refreshSession();
-    await navigateTo("/dashboard");
-  } catch (error) {
-    console.log(error);
-    toast.add({
-      title: "Error",
-      color: "error",
-    });
-  }
+type Schema = z.output<typeof schema>;
+
+async function onSubmit(payload: FormSubmitEvent<Schema>) {
+  console.log({ payload: payload.data.email });
 }
 </script>
 
 <template>
   <div class="flex flex-col items-center justify-center gap-4 p-4">
-    <pre>
-    user: {{ user }}
-    </pre>
-    <pre>
-      loggedIn {{ loggedIn }}
-    </pre>
     <UPageCard class="w-full max-w-md">
       <UAuthForm
-        :schema="loginSchema"
+        :schema="schema"
         :fields="fields"
         :providers="providers"
-        title="Login to your account"
+        title="Register a new account"
         icon="i-lucide-lock"
         @submit="onSubmit"
       >
         <template #description>
           Don't have an account?
           <ULink
-            to="/register"
+            to="/login"
             class="text-primary font-medium"
-            >Sign up</ULink
+            >Sign in</ULink
           >.
         </template>
         <template #password-hint>
@@ -109,10 +86,9 @@ async function onSubmit(payload: FormSubmitEvent<LoginSchemaType>) {
         </template>
         <template #validation>
           <UAlert
-            v-if="serverError"
             color="error"
             icon="i-lucide-info"
-            :title="serverError"
+            title="Error signing in"
           />
         </template>
         <template #footer>

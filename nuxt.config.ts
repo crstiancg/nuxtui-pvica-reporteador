@@ -6,7 +6,8 @@ export default defineNuxtConfig({
     '@nuxt/image',
     '@nuxt/scripts',
     '@nuxt/test-utils',
-    '@compodium/nuxt'
+    '@compodium/nuxt',
+    'nuxt-auth-utils'
   ],
 
   devtools: {

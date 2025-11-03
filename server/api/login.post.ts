@@ -1,34 +1,20 @@
-import { loginSchema, type LoginSchemaType } from '#shared/zod/login.schema' 
-import jwt from 'jsonwebtoken';
+import { loginSchema } from "#shared/zod/login.schema";
+
 export default defineEventHandler(async (event) => {
+  const { email, password } = await readValidatedBody(event, loginSchema.parse);
 
-  const { apiSecret, public: { baseApi } } = useRuntimeConfig();
-
-  const body = await readBody(event);
-  
-  console.log('Login attempt:', {body});
-
-  const { success, data, error } = loginSchema.safeParse(body);
-  
-  
-  
-  if (!success) {
-    // Handle validation errors
-    return createError({ statusCode: 400, statusMessage: 'Invalid payload'});
+  if (email === "password@gmail.com" && password === "password") {
+    await setUserSession(event, {
+      user: {
+        name: "password",
+        email: "password@gmail.com",
+      },
+    });
+    return {};
   }
 
-  const token = jwt.sign({ email: data.email, baseApi }, apiSecret, { expiresIn: '1h' });
-
-  setCookie(event, 'auth_token', token, {
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    sameSite: process.env.NODE_ENV === 'production' ? 'lax' : 'strict',
-    path: '/',
+  throw createError({
+    statusCode: 401,
+    message: "Bad credentials",
   });
-
-
-  // Proceed with login logic
-  // return { success: true, message: 'Login successful', token };
-
-  return { message: 'Login successful', user: { email: data.email, token } };
-})
+});

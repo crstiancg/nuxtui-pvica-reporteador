@@ -18,14 +18,22 @@ async function logout() {
 </script>
 
 <template>
-   <div>
-    <h1
-      class="text-center text-2xl"
-      v-if="user"
-    >
-      Dashboard: {{ user.name }} - {{ user.email }}
-    </h1>
-    <p>Welcome to your dashboard!</p>
-    <u-button @click="logout">Logout</u-button>
-  </div>
+  <UDashboardPanel id="dashboards" :ui="{ body: 'lg:py-12' }">
+    <template #header>
+      <UDashboardNavbar title="Dashboard">
+        <template #leading>
+          <UDashboardSidebarCollapse />
+        </template>
+      </UDashboardNavbar>
+    </template>
+    <template #body>
+      <h1 class="text-center text-2xl" v-if="user">
+        Dashboard: {{ user.name }} - {{ user.email }}
+      </h1>
+      <p>Welcome to your dashboard!</p>
+      <div class="text-left">
+        <u-button @click="logout" color="error" icon="i-lucide-log-out" variant="outline" loading-auto loading-icon="i-lucide-loader">Cerrar Sesión</u-button>
+      </div>
+    </template>
+  </UDashboardPanel>
 </template>

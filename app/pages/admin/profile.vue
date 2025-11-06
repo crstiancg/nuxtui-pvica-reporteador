@@ -30,14 +30,14 @@ const links = [
       to: "/admin/profile/security",
     },
   ],
-  [
-    {
-      label: "Documentation",
-      icon: "i-lucide-book-open",
-      to: "https://ui.nuxt.com/docs/getting-started/installation/nuxt",
-      target: "_blank",
-    },
-  ],
+  // [
+  //   {
+  //     label: "Documentation",
+  //     icon: "i-lucide-book-open",
+  //     to: "https://ui.nuxt.com/docs/getting-started/installation/nuxt",
+  //     target: "_blank",
+  //   },
+  // ],
 ] satisfies NavigationMenuItem[][];
 </script>
 

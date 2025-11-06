@@ -1,16 +1,15 @@
 <script setup lang="ts">
-// definePageMeta({
-//   middleware: "authenticated",
-// });
 
 definePageMeta({
   middleware: ["authenticated"],
+  layout: "dashboard-layout",
 });
 
-const { user, clear: clearSession } = useUserSession();
+const { user, clear: clearSession, fetch } = useUserSession();
 
 async function logout() {
   await clearSession();
+  await fetch(); // Refresh session state
   await navigateTo("/login");
 }
 
@@ -19,7 +18,7 @@ async function logout() {
 </script>
 
 <template>
-  <div>
+   <div>
     <h1
       class="text-center text-2xl"
       v-if="user"

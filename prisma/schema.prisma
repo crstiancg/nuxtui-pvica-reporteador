@@ -9,10 +9,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
-
 
 model User {
   id            Int     @id @default(autoincrement())
@@ -52,4 +51,16 @@ model Post {
   published Boolean @default(false)
   author    User    @relation(fields: [authorId], references: [id])
   authorId  Int
+}
+
+model Centro {
+  id           Int      @id @default(autoincrement())
+  departamento String   @db.VarChar(100)
+  provincia    String   @db.VarChar(100)
+  distrito     String   @db.VarChar(100)
+  codigoUbigeo String   @unique @map("codigo_ubigeo") @db.VarChar(6)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("centros")
 }

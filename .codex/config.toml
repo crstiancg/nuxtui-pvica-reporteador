@@ -1,0 +1,5 @@
+﻿[mcp_servers.nuxt-ui]
+url = "https://ui.nuxt.com/mcp"
+enabled = true
+startup_timeout_sec = 20
+tool_timeout_sec = 60

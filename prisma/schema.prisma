@@ -61,6 +61,49 @@ model Centro {
   codigoUbigeo String   @unique @map("codigo_ubigeo") @db.VarChar(6)
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
+  reportes     Reporte[]
 
   @@map("centros")
+}
+
+model Periodo {
+  id        Int       @id @default(autoincrement())
+  anio      Int
+  mes       Int
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  reportes  Reporte[]
+
+  @@unique([anio, mes])
+  @@map("periodos")
+}
+
+model Reporte {
+  id             Int      @id @default(autoincrement())
+  periodoId      Int      @map("periodo_id")
+  centroId       Int      @map("centro_id")
+  cloro          Float
+  conductividad  Float
+  ph             Float
+  temperatura    Float
+  turbiedad      Float
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  periodo Periodo @relation(fields: [periodoId], references: [id], onDelete: Cascade)
+  centro  Centro  @relation(fields: [centroId], references: [id], onDelete: Cascade)
+
+  @@index([periodoId])
+  @@index([centroId])
+  @@map("reportes")
+}
+
+model Parametro {
+  id             Int      @id @default(autoincrement())
+  codigoCabecera String   @map("codigo_cabecera") @db.VarChar(100)
+  valor          String   @db.VarChar(191)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("parametros")
 }

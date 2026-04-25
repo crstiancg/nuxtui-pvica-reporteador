@@ -75,7 +75,7 @@ const submit = () => {
           name="departamento"
           required
         >
-          <UInput
+          <UInput class="w-full"
             v-model="state.departamento"
             placeholder="Ej. Lima"
           />
@@ -86,7 +86,7 @@ const submit = () => {
           name="provincia"
           required
         >
-          <UInput
+          <UInput class="w-full"
             v-model="state.provincia"
             placeholder="Ej. Lima"
           />
@@ -97,7 +97,7 @@ const submit = () => {
           name="distrito"
           required
         >
-          <UInput
+          <UInput class="w-full"
             v-model="state.distrito"
             placeholder="Ej. Miraflores"
           />
@@ -108,7 +108,7 @@ const submit = () => {
           name="codigoUbigeo"
           required
         >
-          <UInput
+          <UInput class="w-full"
             v-model="state.codigoUbigeo"
             maxlength="6"
             placeholder="Ej. 150122"

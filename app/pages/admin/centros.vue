@@ -9,6 +9,7 @@ definePageMeta({
 
 const toast = useToast()
 const search = ref('')
+const debouncedSearch = ref('')
 const page = ref(1)
 const perPage = ref(10)
 const isFormModalOpen = ref(false)
@@ -17,10 +18,11 @@ const isSubmitting = ref(false)
 const isDeleting = ref(false)
 const editingCentro = ref<Centro | null>(null)
 const deletingCentro = ref<Centro | null>(null)
+let searchDebounceTimer: ReturnType<typeof setTimeout> | undefined
 
 const { data, pending, refresh } = await useFetch<CentrosResponse>('/api/centros', {
   query: {
-    search,
+    search: debouncedSearch,
     page,
     perPage
   }
@@ -29,8 +31,21 @@ const { data, pending, refresh } = await useFetch<CentrosResponse>('/api/centros
 const centros = computed(() => data.value?.data ?? [])
 const total = computed(() => data.value?.meta.total ?? 0)
 
-watch([search, perPage], () => {
+watch(search, (value) => {
+  clearTimeout(searchDebounceTimer)
+
+  searchDebounceTimer = setTimeout(() => {
+    page.value = 1
+    debouncedSearch.value = value
+  }, 300)
+})
+
+watch(perPage, () => {
   page.value = 1
+})
+
+onBeforeUnmount(() => {
+  clearTimeout(searchDebounceTimer)
 })
 
 const openCreateModal = () => {

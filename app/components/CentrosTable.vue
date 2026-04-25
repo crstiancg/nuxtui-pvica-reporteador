@@ -27,11 +27,25 @@ const currentPerPage = computed({
   get: () => props.perPage,
   set: value => emit('update:perPage', value)
 })
+
+const showInitialLoading = computed(() => props.pending && !props.centros.length)
+const showUpdating = computed(() => props.pending && props.centros.length > 0)
 </script>
 
 <template>
   <UCard>
-    <div class="overflow-x-auto">
+    <div class="relative overflow-x-auto">
+      <div
+        v-if="showUpdating"
+        class="absolute right-4 top-4 z-10 flex items-center gap-2 rounded-md border border-default bg-default/95 px-3 py-2 text-sm text-muted shadow-sm"
+      >
+        <UIcon
+          name="i-lucide-loader-circle"
+          class="size-4 animate-spin"
+        />
+        Actualizando
+      </div>
+
       <table class="min-w-full divide-y divide-default">
         <thead>
           <tr class="text-left text-sm text-muted">
@@ -57,7 +71,7 @@ const currentPerPage = computed({
         </thead>
 
         <tbody class="divide-y divide-default">
-          <tr v-if="pending">
+          <tr v-if="showInitialLoading">
             <td
               colspan="6"
               class="px-4 py-8 text-center text-muted"

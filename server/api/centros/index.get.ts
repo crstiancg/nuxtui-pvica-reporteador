@@ -17,18 +17,24 @@ export default eventHandler(async (event) => {
 
   const query = getQuery(event)
   const search = typeof query.search === 'string' ? query.search.trim() : ''
+  const requestedSearchFields = typeof query.searchFields === 'string'
+    ? query.searchFields.split(',').map(field => field.trim()).filter(Boolean)
+    : []
+  const allowedSearchFields = ['departamento', 'provincia', 'distrito', 'codigoUbigeo'] as const
+  const searchFields = requestedSearchFields.length
+    ? requestedSearchFields.filter((field): field is typeof allowedSearchFields[number] =>
+        allowedSearchFields.includes(field as typeof allowedSearchFields[number])
+      )
+    : ['distrito']
   const page = parsePositiveInteger(query.page, 1)
   const perPage = Math.min(parsePositiveInteger(query.perPage, 10), 100)
   const skip = (page - 1) * perPage
 
   const where = search
     ? {
-        OR: [
-          { departamento: { contains: search } },
-          { provincia: { contains: search } },
-          { distrito: { contains: search } },
-          { codigoUbigeo: { contains: search } }
-        ]
+        OR: searchFields.map(field => ({
+          [field]: { contains: search }
+        }))
       }
     : undefined
 

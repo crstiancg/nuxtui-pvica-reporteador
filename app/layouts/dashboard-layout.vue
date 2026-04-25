@@ -31,6 +31,30 @@ const links = [
       }
     },
     {
+      label: 'Periodos',
+      to: '/admin/periodos',
+      icon: 'i-lucide-calendar-days',
+      onSelect: () => {
+        open.value = false
+      }
+    },
+    {
+      label: 'Reportes',
+      to: '/admin/reportes',
+      icon: 'i-lucide-file-chart-column',
+      onSelect: () => {
+        open.value = false
+      }
+    },
+    {
+      label: 'Parametros',
+      to: '/admin/parametros',
+      icon: 'i-lucide-sliders-horizontal',
+      onSelect: () => {
+        open.value = false
+      }
+    },
+    {
       label: 'Profile',
       to: '/admin/profile',
       icon: 'i-lucide-user',

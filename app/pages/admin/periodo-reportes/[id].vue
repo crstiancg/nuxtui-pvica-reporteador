@@ -20,8 +20,10 @@ const debouncedSearch = ref('')
 const page = ref(1)
 const perPage = ref(10)
 const isFormModalOpen = ref(false)
+const isImportModalOpen = ref(false)
 const isDeleteModalOpen = ref(false)
 const isSubmitting = ref(false)
+const isImporting = ref(false)
 const isDeleting = ref(false)
 const editingReporte = ref<Reporte | null>(null)
 const deletingReporte = ref<Reporte | null>(null)
@@ -52,13 +54,19 @@ watch(search, (value) => {
   }, 300)
 })
 
-watch(perPage, () => { page.value = 1 })
+watch(perPage, () => {
+  page.value = 1
+})
 onBeforeUnmount(() => clearTimeout(searchDebounceTimer))
 
 const openCreateModal = async () => {
   editingReporte.value = null
   await refreshCentros()
   isFormModalOpen.value = true
+}
+
+const openImportModal = () => {
+  isImportModalOpen.value = true
 }
 
 const openEditModal = async (reporte: Reporte) => {
@@ -115,18 +123,79 @@ const deleteReporte = async () => {
     isDeleting.value = false
   }
 }
+
+const importExcel = async (payload: { file: File, mode: 'append' | 'replace' }) => {
+  isImporting.value = true
+
+  try {
+    const formData = new FormData()
+    formData.append('file', payload.file)
+    formData.append('mode', payload.mode)
+
+    const response = await $fetch<{
+      data: {
+        mode: string
+        centrosAfectados: number
+        filasProcesadas: number
+        itemsImportados: number
+        reportesCreados: number
+        reportesActualizados: number
+      }
+    }>(`/api/periodos/${periodoId}/import-reportes`, {
+      method: 'POST',
+      body: formData
+    })
+
+    await refresh()
+    isImportModalOpen.value = false
+
+    toast.add({
+      title: 'Importacion completada',
+      description: `${response.data.itemsImportados} items procesados en ${response.data.centrosAfectados} centros. Creados: ${response.data.reportesCreados}, actualizados: ${response.data.reportesActualizados}.`,
+      color: 'success'
+    })
+  } catch (error: unknown) {
+    toast.add({
+      title: 'No se pudo importar el Excel',
+      description: typeof error === 'object' && error !== null && 'statusMessage' in error ? String(error.statusMessage) : 'Revisa el archivo e intenta nuevamente',
+      color: 'error'
+    })
+  } finally {
+    isImporting.value = false
+  }
+}
 </script>
 
 <template>
-  <UDashboardPanel id="periodo-reportes" :ui="{ body: 'lg:py-12' }">
+  <UDashboardPanel
+    id="periodo-reportes"
+    :ui="{ body: 'lg:py-12' }"
+  >
     <template #header>
       <UDashboardNavbar :title="`Reportes ${periodoLabel}`">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
         <template #right>
-          <UButton color="neutral" variant="ghost" icon="i-lucide-arrow-left" label="Periodos" @click="router.push('/admin/periodos')" />
-          <UButton icon="i-lucide-plus" label="Nuevo reporte" @click="openCreateModal" />
+          <UButton
+            color="neutral"
+            variant="ghost"
+            icon="i-lucide-arrow-left"
+            label="Periodos"
+            @click="router.push('/admin/periodos')"
+          />
+          <UButton
+            color="neutral"
+            variant="soft"
+            icon="i-lucide-file-spreadsheet"
+            label="Importar Excel"
+            @click="openImportModal"
+          />
+          <UButton
+            icon="i-lucide-plus"
+            label="Nuevo reporte"
+            @click="openCreateModal"
+          />
         </template>
       </UDashboardNavbar>
     </template>
@@ -135,10 +204,19 @@ const deleteReporte = async () => {
       <div class="flex flex-col gap-6 w-full lg:max-w-6xl mx-auto">
         <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 class="text-2xl font-semibold">Reportes del periodo {{ periodoLabel }}</h1>
-            <p class="text-muted">Registra y revisa las mediciones correspondientes a este mes.</p>
+            <h1 class="text-2xl font-semibold">
+              Reportes del periodo {{ periodoLabel }}
+            </h1>
+            <p class="text-muted">
+              Registra centros del mes y sus items de medicion correspondientes.
+            </p>
           </div>
-          <UInput v-model="search" icon="i-lucide-search" placeholder="Buscar valor..." class="sm:w-72" />
+          <UInput
+            v-model="search"
+            icon="i-lucide-search"
+            placeholder="Buscar centro o valor..."
+            class="sm:w-72"
+          />
         </div>
 
         <ReportesTable
@@ -159,6 +237,13 @@ const deleteReporte = async () => {
           :fixed-periodo="periodo"
           :loading="isSubmitting"
           @submit="saveReporte"
+        />
+
+        <ReporteImportModal
+          v-model:open="isImportModalOpen"
+          :fixed-periodo="periodo"
+          :loading="isImporting"
+          @submit="importExcel"
         />
 
         <CrudDeleteModal

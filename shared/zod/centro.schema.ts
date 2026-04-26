@@ -14,7 +14,7 @@ export const centroSchema = z.object({
   codigoUbigeo: z
     .string()
     .trim()
-    .regex(/^\d{6}$/, 'El código ubigeo debe tener 6 dígitos')
+    .regex(/^\d{10}$/, 'El código ubigeo debe tener 10 dígitos')
 })
 
 export type CentroSchemaType = z.infer<typeof centroSchema>

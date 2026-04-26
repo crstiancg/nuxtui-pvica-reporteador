@@ -110,7 +110,7 @@ const submit = () => {
         >
           <UInput class="w-full"
             v-model="state.codigoUbigeo"
-            maxlength="6"
+            maxlength="10"
             placeholder="Ej. 150122"
           />
         </UFormField>

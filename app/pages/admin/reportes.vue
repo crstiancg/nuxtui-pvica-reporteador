@@ -41,7 +41,9 @@ watch(search, (value) => {
     debouncedSearch.value = value
   }, 300)
 })
-watch(perPage, () => { page.value = 1 })
+watch(perPage, () => {
+  page.value = 1
+})
 onBeforeUnmount(() => clearTimeout(searchDebounceTimer))
 
 const openCreateModal = async () => {
@@ -101,25 +103,66 @@ const deleteReporte = async () => {
 </script>
 
 <template>
-  <UDashboardPanel id="reportes" :ui="{ body: 'lg:py-12' }">
+  <UDashboardPanel
+    id="reportes"
+    :ui="{ body: 'lg:py-12' }"
+  >
     <template #header>
       <UDashboardNavbar title="Reportes">
-        <template #leading><UDashboardSidebarCollapse /></template>
-        <template #right><UButton icon="i-lucide-plus" label="Nuevo reporte" @click="openCreateModal" /></template>
+        <template #leading>
+          <UDashboardSidebarCollapse />
+        </template>
+        <template #right>
+          <UButton
+            icon="i-lucide-plus"
+            label="Nuevo reporte"
+            @click="openCreateModal"
+          />
+        </template>
       </UDashboardNavbar>
     </template>
     <template #body>
       <div class="flex flex-col gap-6 w-full lg:max-w-6xl mx-auto">
         <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 class="text-2xl font-semibold">Gestion de reportes</h1>
-            <p class="text-muted">Administra mediciones de cloro, conductividad, PH, temperatura y turbiedad.</p>
+            <h1 class="text-2xl font-semibold">
+              Gestion de reportes
+            </h1>
+            <p class="text-muted">
+              Administra cabeceras mensuales por centro y sus items de medicion.
+            </p>
           </div>
-          <UInput v-model="search" icon="i-lucide-search" placeholder="Buscar valor o periodo..." class="sm:w-72" />
+          <UInput
+            v-model="search"
+            icon="i-lucide-search"
+            placeholder="Buscar centro, periodo o valor..."
+            class="sm:w-72"
+          />
         </div>
-        <ReportesTable v-model:page="page" v-model:per-page="perPage" :reportes="reportes" :pending="pending" :total="total" @edit="openEditModal" @delete="openDeleteModal" />
-        <ReporteFormModal v-model:open="isFormModalOpen" :reporte="editingReporte" :centros="centros" :periodos="periodos" :loading="isSubmitting" @submit="saveReporte" />
-        <CrudDeleteModal v-model:open="isDeleteModalOpen" title="Eliminar reporte" :description="deletingReporte ? `Vas a eliminar el reporte #${deletingReporte.id}.` : undefined" :loading="isDeleting" @confirm="deleteReporte" />
+        <ReportesTable
+          v-model:page="page"
+          v-model:per-page="perPage"
+          :reportes="reportes"
+          :pending="pending"
+          :total="total"
+          @edit="openEditModal"
+          @delete="openDeleteModal"
+        />
+        <ReporteFormModal
+          v-model:open="isFormModalOpen"
+          :reporte="editingReporte"
+          :centros="centros"
+          :periodos="periodos"
+          :loading="isSubmitting"
+          @submit="saveReporte"
+        />
+        <CrudDeleteModal
+          v-model:open="isDeleteModalOpen"
+          title="Eliminar reporte"
+          :description="deletingReporte ? `Vas a eliminar el reporte #${deletingReporte.id}.` : undefined"
+          :loading="isDeleting"
+          @confirm="deleteReporte"
+        />
       </div>
     </template>
   </UDashboardPanel>

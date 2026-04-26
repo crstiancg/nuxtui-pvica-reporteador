@@ -15,7 +15,10 @@ export default eventHandler(async (event) => {
   const reporte = await prisma.reporte.findUnique({
     include: {
       centro: true,
-      periodo: true
+      periodo: true,
+      items: {
+        orderBy: { id: 'asc' }
+      }
     },
     where: { id }
   })

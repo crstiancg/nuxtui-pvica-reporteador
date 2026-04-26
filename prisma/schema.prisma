@@ -79,23 +79,37 @@ model Periodo {
 }
 
 model Reporte {
-  id             Int      @id @default(autoincrement())
-  periodoId      Int      @map("periodo_id")
-  centroId       Int      @map("centro_id")
-  cloro          Float
-  conductividad  Float
-  ph             Float
-  temperatura    Float
-  turbiedad      Float
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  id        Int      @id @default(autoincrement())
+  periodoId Int      @map("periodo_id")
+  centroId  Int      @map("centro_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   periodo Periodo @relation(fields: [periodoId], references: [id], onDelete: Cascade)
   centro  Centro  @relation(fields: [centroId], references: [id], onDelete: Cascade)
+  items   ReporteItem[]
 
   @@index([periodoId])
   @@index([centroId])
+  @@unique([periodoId, centroId])
   @@map("reportes")
+}
+
+model ReporteItem {
+  id            Int      @id @default(autoincrement())
+  reporteId     Int      @map("reporte_id")
+  cloro         Float
+  conductividad Float
+  ph            Float
+  temperatura   Float
+  turbiedad     Float
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  reporte Reporte @relation(fields: [reporteId], references: [id], onDelete: Cascade)
+
+  @@index([reporteId])
+  @@map("reporte_items")
 }
 
 model Parametro {

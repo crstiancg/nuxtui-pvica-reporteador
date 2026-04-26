@@ -11,27 +11,42 @@ export default eventHandler(async (event) => {
   const skip = (page - 1) * perPage
   const searchNumber = Number(search)
 
-  const filters = []
+  const filters: object[] = []
 
   if (periodoId) {
     filters.push({ periodoId })
   }
 
   if (search) {
-    filters.push(Number.isFinite(searchNumber)
-      ? {
-          OR: [
-            { cloro: searchNumber },
-            { conductividad: searchNumber },
-            { ph: searchNumber },
-            { temperatura: searchNumber },
-            { turbiedad: searchNumber },
-            { centro: { id: searchNumber } },
-            { periodo: { anio: searchNumber } },
-            { periodo: { mes: searchNumber } }
-          ]
+    const orFilters: object[] = [
+      { centro: { distrito: { contains: search } } },
+      { centro: { codigoUbigeo: { contains: search } } },
+      { centro: { departamento: { contains: search } } },
+      { centro: { provincia: { contains: search } } }
+    ]
+
+    if (Number.isFinite(searchNumber)) {
+      orFilters.push(
+        { centro: { id: searchNumber } },
+        { periodo: { anio: searchNumber } },
+        { periodo: { mes: searchNumber } },
+        {
+          items: {
+            some: {
+              OR: [
+                { cloro: searchNumber },
+                { conductividad: searchNumber },
+                { ph: searchNumber },
+                { temperatura: searchNumber },
+                { turbiedad: searchNumber }
+              ]
+            }
+          }
         }
-      : { id: -1 })
+      )
+    }
+
+    filters.push({ OR: orFilters })
   }
 
   const where = filters.length ? { AND: filters } : undefined
@@ -41,7 +56,10 @@ export default eventHandler(async (event) => {
     prisma.reporte.findMany({
       include: {
         centro: true,
-        periodo: true
+        periodo: true,
+        items: {
+          orderBy: { id: 'asc' }
+        }
       },
       where,
       skip,

@@ -5,6 +5,14 @@ const measurement = (field: string) =>
     .number({ error: `${field} es requerido` })
     .finite(`${field} debe ser un numero valido`)
 
+export const reporteItemSchema = z.object({
+  cloro: measurement('Cloro'),
+  conductividad: measurement('Conductividad'),
+  ph: measurement('PH'),
+  temperatura: measurement('Temperatura'),
+  turbiedad: measurement('Turbiedad')
+})
+
 export const reporteSchema = z.object({
   periodoId: z.coerce
     .number({ error: 'Periodo es requerido' })
@@ -14,11 +22,9 @@ export const reporteSchema = z.object({
     .number({ error: 'Centro es requerido' })
     .int('Centro debe ser entero')
     .positive('Centro es requerido'),
-  cloro: measurement('Cloro'),
-  conductividad: measurement('Conductividad'),
-  ph: measurement('PH'),
-  temperatura: measurement('Temperatura'),
-  turbiedad: measurement('Turbiedad')
+  items: z.array(reporteItemSchema)
+    .min(1, 'Debes agregar al menos un item al reporte')
 })
 
+export type ReporteItemSchemaType = z.infer<typeof reporteItemSchema>
 export type ReporteSchemaType = z.infer<typeof reporteSchema>

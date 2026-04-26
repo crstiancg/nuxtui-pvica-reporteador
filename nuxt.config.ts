@@ -7,7 +7,7 @@ export default defineNuxtConfig({
     '@nuxt/scripts',
     '@nuxt/test-utils',
     '@compodium/nuxt',
-    'nuxt-auth-utils',
+    'nuxt-auth-utils'
   ],
 
   devtools: {
@@ -16,17 +16,18 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
+  runtimeConfig: {
+    apiSecret: '', // The private keys which are only available server-side
+    public: {
+      baseApi: '' // Keys within public are also exposed client-side
+    }
+  },
+
+  ignore: ['**/app/generated/prisma/**'],
+
   routeRules: {
     '/': { prerender: true }
   },
-
-  runtimeConfig: {
-    apiSecret: "", // The private keys which are only available server-side
-    public: {
-      baseApi: "", // Keys within public are also exposed client-side
-    },
-  },
-
   compatibilityDate: '2025-01-15',
 
   eslint: {

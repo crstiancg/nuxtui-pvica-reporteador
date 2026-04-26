@@ -18,10 +18,20 @@ export default eventHandler(async (event) => {
   try {
     const reporte = await prisma.reporte.update({
       where: { id },
-      data: body,
+      data: {
+        periodoId: body.periodoId,
+        centroId: body.centroId,
+        items: {
+          deleteMany: {},
+          create: body.items
+        }
+      },
       include: {
         centro: true,
-        periodo: true
+        periodo: true,
+        items: {
+          orderBy: { id: 'asc' }
+        }
       }
     })
 
@@ -40,6 +50,13 @@ export default eventHandler(async (event) => {
       throw createError({
         statusCode: 422,
         statusMessage: 'El periodo o centro seleccionado no existe'
+      })
+    }
+
+    if (isPrismaError(error, 'P2002')) {
+      throw createError({
+        statusCode: 409,
+        statusMessage: 'Ya existe un reporte para ese centro en el periodo seleccionado'
       })
     }
 

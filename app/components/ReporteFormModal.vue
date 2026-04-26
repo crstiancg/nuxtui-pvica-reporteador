@@ -5,6 +5,7 @@ import type { Reporte } from '#shared/types/reporte'
 import { reporteSchema, type ReporteSchemaType } from '#shared/zod/reporte.schema'
 
 const props = defineProps<{
+  fixedPeriodo?: Periodo | null
   loading?: boolean
   centros: Centro[]
   open: boolean
@@ -18,7 +19,7 @@ const emit = defineEmits<{
 }>()
 
 const emptyState = (): ReporteSchemaType => ({
-  periodoId: props.periodos[0]?.id ?? 0,
+  periodoId: props.fixedPeriodo?.id ?? props.periodos[0]?.id ?? 0,
   centroId: props.centros[0]?.id ?? 0,
   cloro: 0,
   conductividad: 0,
@@ -30,6 +31,11 @@ const emptyState = (): ReporteSchemaType => ({
 const state = reactive<ReporteSchemaType>(emptyState())
 const isOpen = computed({ get: () => props.open, set: value => emit('update:open', value) })
 const modalTitle = computed(() => props.reporte ? 'Editar reporte' : 'Nuevo reporte')
+const modalDescription = computed(() =>
+  props.fixedPeriodo
+    ? `Periodo ${props.fixedPeriodo.anio}-${String(props.fixedPeriodo.mes).padStart(2, '0')}`
+    : 'Completa los parametros medidos del periodo.'
+)
 const submitLabel = computed(() => props.reporte ? 'Guardar cambios' : 'Crear reporte')
 const periodoOptions = computed(() => props.periodos.map(periodo => ({
   label: `${periodo.anio}-${String(periodo.mes).padStart(2, '0')}`,
@@ -40,13 +46,13 @@ const centroInitialItems = computed(() => [
   ...(props.reporte?.centro ? [props.reporte.centro] : [])
 ])
 
-watch(() => [props.open, props.reporte, props.periodos, props.centros] as const, ([open]) => {
+watch(() => [props.open, props.reporte, props.periodos, props.centros, props.fixedPeriodo] as const, ([open]) => {
   if (!open) return
   Object.assign(
     state,
     props.reporte
       ? {
-          periodoId: props.reporte.periodoId,
+          periodoId: props.fixedPeriodo?.id ?? props.reporte.periodoId,
           centroId: props.reporte.centroId,
           cloro: props.reporte.cloro,
           conductividad: props.reporte.conductividad,
@@ -70,10 +76,10 @@ const submit = () => emit('submit', {
 </script>
 
 <template>
-  <UModal v-model:open="isOpen" :title="modalTitle" description="Completa los parametros medidos del periodo.">
+  <UModal v-model:open="isOpen" :title="modalTitle" :description="modalDescription">
     <template #body>
       <UForm :schema="reporteSchema" :state="state" class="space-y-4" @submit="submit">
-        <UFormField label="Periodo" name="periodoId" required>
+        <UFormField v-if="!fixedPeriodo" label="Periodo" name="periodoId" required>
           <USelect
             v-model="state.periodoId"
             class="w-full"

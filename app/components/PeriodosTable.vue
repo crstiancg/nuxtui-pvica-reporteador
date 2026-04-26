@@ -57,6 +57,7 @@ const showUpdating = computed(() => props.pending && props.periodos.length > 0)
               <td class="px-4 py-3">{{ periodo.mes }}</td>
               <td class="px-4 py-3">
                 <div class="flex justify-end gap-2">
+                  <UButton icon="i-lucide-file-text" color="neutral" variant="ghost" aria-label="Ver reportes del periodo" :to="`/admin/periodo-reportes/${periodo.id}`" />
                   <UButton icon="i-lucide-pencil" color="neutral" variant="ghost" aria-label="Editar periodo" @click="emit('edit', periodo)" />
                   <UButton icon="i-lucide-trash-2" color="error" variant="ghost" aria-label="Eliminar periodo" @click="emit('delete', periodo)" />
                 </div>

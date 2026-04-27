@@ -17,6 +17,14 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  if (!user.password) {
+    console.log("ERROR: User has no password");
+    throw createError({
+      statusCode: 401,
+      statusMessage: "Invalid password",
+    });
+  }
+
   const isPasswordValid = await bcrypt.compare(password, user.password);
 
   if (!isPasswordValid) {

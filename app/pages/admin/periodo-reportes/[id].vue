@@ -21,11 +21,13 @@ const page = ref(1)
 const perPage = ref(10)
 const isFormModalOpen = ref(false)
 const isImportModalOpen = ref(false)
+const isDetailModalOpen = ref(false)
 const isDeleteModalOpen = ref(false)
 const isSubmitting = ref(false)
 const isImporting = ref(false)
 const isDeleting = ref(false)
 const editingReporte = ref<Reporte | null>(null)
+const detailReporte = ref<Reporte | null>(null)
 const deletingReporte = ref<Reporte | null>(null)
 let searchDebounceTimer: ReturnType<typeof setTimeout> | undefined
 
@@ -73,6 +75,11 @@ const openEditModal = async (reporte: Reporte) => {
   editingReporte.value = reporte
   await refreshCentros()
   isFormModalOpen.value = true
+}
+
+const openDetailModal = (reporte: Reporte) => {
+  detailReporte.value = reporte
+  isDetailModalOpen.value = true
 }
 
 const openDeleteModal = (reporte: Reporte) => {
@@ -225,8 +232,14 @@ const importExcel = async (payload: { file: File, mode: 'append' | 'replace' }) 
           :reportes="reportes"
           :pending="pending"
           :total="total"
+          @view="openDetailModal"
           @edit="openEditModal"
           @delete="openDeleteModal"
+        />
+
+        <ReporteDetailModal
+          v-model:open="isDetailModalOpen"
+          :reporte="detailReporte"
         />
 
         <ReporteFormModal

@@ -26,6 +26,60 @@ const numberFields = [
   'decretoTurbiedad'
 ] as const
 
+type ItemFieldKey = keyof ReporteItemSchemaType
+type FieldDescriptor = {
+  key: ItemFieldKey
+  label: string
+}
+
+const decretoFields: FieldDescriptor[] = [
+  { key: 'decretoAluminio', label: 'Aluminio' },
+  { key: 'decretoBacteriasColiformesFecales', label: 'Bacterias coliformes fecales' },
+  { key: 'decretoBacteriasColiformesTotales', label: 'Bacterias coliformes totales' },
+  { key: 'decretoBacteriasHeterotroficas', label: 'Bacterias heterotroficas' },
+  { key: 'decretoCloro', label: 'Cloro' },
+  { key: 'decretoCobre', label: 'Cobre' },
+  { key: 'decretoConductividad', label: 'Conductividad' },
+  { key: 'decretoCromoTotal', label: 'Cromo total' },
+  { key: 'decretoEColiNmp', label: 'E. Coli (NMP)' },
+  { key: 'decretoHierro', label: 'Hierro' },
+  { key: 'decretoHuevosLarvasHelmintos', label: 'Huevos larvas helmintos' },
+  { key: 'decretoManganeso', label: 'Manganeso' },
+  { key: 'decretoNitratos', label: 'Nitratos' },
+  { key: 'decretoNitritosExposicionCorta', label: 'Nitritos exposicion corta' },
+  { key: 'decretoOrganismosVidaLibre', label: 'Organismos de vida libre' },
+  { key: 'decretoPh', label: 'pH' },
+  { key: 'decretoSolidosTotalesDisueltos', label: 'Solidos totales disueltos' },
+  { key: 'decretoSulfatos', label: 'Sulfatos' },
+  { key: 'decretoTemperatura', label: 'Temperatura' },
+  { key: 'decretoTurbiedad', label: 'Turbiedad' }
+]
+
+const ecaFields: FieldDescriptor[] = [
+  { key: 'ecaAluminio', label: 'Aluminio' },
+  { key: 'ecaCobre', label: 'Cobre' },
+  { key: 'ecaColiformesTermotolerantes', label: 'Coliformes termotolerantes' },
+  { key: 'ecaColiformesTotales', label: 'Coliformes totales' },
+  { key: 'ecaConductividad', label: 'Conductividad' },
+  { key: 'ecaCromoTotal', label: 'Cromo total' },
+  { key: 'ecaEscherichiaColi', label: 'Escherichia coli' },
+  { key: 'ecaFormasParasitarias', label: 'Formas parasitarias' },
+  { key: 'ecaHierro', label: 'Hierro' },
+  { key: 'ecaManganeso', label: 'Manganeso' },
+  { key: 'ecaNitratos', label: 'Nitratos' },
+  { key: 'ecaNitritos', label: 'Nitritos' },
+  { key: 'ecaOrganismosVidaLibre', label: 'Organismos de vida libre' },
+  { key: 'ecaPh', label: 'pH' },
+  { key: 'ecaSulfatos', label: 'Sulfatos' },
+  { key: 'ecaTemperatura', label: 'Temperatura' },
+  { key: 'ecaTurbiedad', label: 'Turbiedad' }
+]
+
+const itemTabItems = [
+  { label: 'Decreto', slot: 'decreto', icon: 'i-lucide-flask-conical' },
+  { label: 'Eca', slot: 'eca', icon: 'i-lucide-test-tube-diagonal' }
+]
+
 const createEmptyItem = (): ReporteItemSchemaType => ({
   codigoMuestreo: null,
   codigoMuestra: null,
@@ -111,6 +165,7 @@ const emptyState = (): ReporteSchemaType => ({
 })
 
 const state = reactive<ReporteSchemaType>(emptyState())
+const expandedItemIndexes = ref<number[]>([0])
 const isOpen = computed({ get: () => props.open, set: value => emit('update:open', value) })
 const modalTitle = computed(() => props.reporte ? 'Editar reporte' : 'Nuevo reporte')
 const modalDescription = computed(() =>
@@ -141,6 +196,8 @@ const resetState = () => {
         }
       : emptyState()
   )
+
+  expandedItemIndexes.value = state.items.length ? [0] : []
 }
 
 watch(() => [props.open, props.reporte, props.periodos, props.centros, props.fixedPeriodo] as const, ([open]) => {
@@ -150,19 +207,45 @@ watch(() => [props.open, props.reporte, props.periodos, props.centros, props.fix
 
 const addItem = () => {
   state.items.push(createEmptyItem())
+  expandedItemIndexes.value = [...new Set([...expandedItemIndexes.value, state.items.length - 1])]
 }
 
 const removeItem = (index: number) => {
   if (state.items.length === 1) return
   state.items.splice(index, 1)
+  expandedItemIndexes.value = expandedItemIndexes.value
+    .filter(itemIndex => itemIndex !== index)
+    .map(itemIndex => itemIndex > index ? itemIndex - 1 : itemIndex)
+
+  if (!expandedItemIndexes.value.length && state.items.length) {
+    expandedItemIndexes.value = [0]
+  }
 }
 
-const itemContextLabel = (item: ReporteItemSchemaType) =>
-  item.lugarMuestreoNombre
-  || item.lugarMuestreoUbicacion
-  || item.codigoMuestra
-  || item.codigoMuestreo
-  || 'Sin referencia'
+const isNumberField = (field: ItemFieldKey) =>
+  (numberFields as readonly ItemFieldKey[]).includes(field)
+
+const isItemExpanded = (index: number) => expandedItemIndexes.value.includes(index)
+
+const toggleItem = (index: number) => {
+  if (isItemExpanded(index)) {
+    expandedItemIndexes.value = expandedItemIndexes.value.filter(itemIndex => itemIndex !== index)
+
+    if (!expandedItemIndexes.value.length && state.items.length) {
+      expandedItemIndexes.value = [index]
+    }
+
+    return
+  }
+
+  expandedItemIndexes.value = [...expandedItemIndexes.value, index].sort((a, b) => a - b)
+}
+
+const filledFieldsCount = (item: ReporteItemSchemaType, fields: FieldDescriptor[]) =>
+  fields.reduce((count, field) => {
+    const value = item[field.key]
+    return value !== null && value !== '' ? count + 1 : count
+  }, 0)
 
 const submit = () => emit('submit', {
   periodoId: Number(state.periodoId),
@@ -227,7 +310,7 @@ const submit = () => emit('submit', {
                 Items del reporte
               </h3>
               <p class="text-sm text-muted">
-                La tabla edita los valores principales del bloque Decreto. Los demas campos del Excel se conservan en cada item.
+                Edita solo los bloques de parametros Decreto y Eca. El resto de campos del item se conserva sin mostrarse.
               </p>
             </div>
             <UButton
@@ -240,137 +323,89 @@ const submit = () => emit('submit', {
             />
           </div>
 
-          <div class="overflow-x-auto rounded-lg border border-default/70">
-            <table class="min-w-[1100px] w-full divide-y divide-default">
-              <thead class="bg-default/40">
-                <tr class="text-left text-sm text-muted">
-                  <th class="px-3 py-3 font-medium">
-                    Item
-                  </th>
-                  <th class="px-3 py-3 font-medium">
-                    Referencia
-                  </th>
-                  <th class="px-3 py-3 font-medium">
-                    Cloro
-                  </th>
-                  <th class="px-3 py-3 font-medium">
-                    Conductividad
-                  </th>
-                  <th class="px-3 py-3 font-medium">
-                    PH
-                  </th>
-                  <th class="px-3 py-3 font-medium">
-                    Temperatura
-                  </th>
-                  <th class="px-3 py-3 font-medium">
-                    Turbiedad
-                  </th>
-                  <th class="px-3 py-3 font-medium">
-                    Hrs/Dia
-                  </th>
-                  <th class="px-3 py-3 font-medium">
-                    Dias/Sem
-                  </th>
-                  <th class="px-3 py-3 font-medium text-right">
-                    Accion
-                  </th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-default">
-                <tr
-                  v-for="(item, index) in state.items"
-                  :key="index"
-                  class="align-top"
+          <div class="space-y-4">
+            <UCard
+              v-for="(item, index) in state.items"
+              :key="index"
+            >
+              <template #header>
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <button
+                    type="button"
+                    class="flex flex-1 items-start justify-between gap-4 text-left"
+                    @click="toggleItem(index)"
+                  >
+                    <div class="min-w-0">
+                      <h4 class="font-medium">
+                        Item {{ index + 1 }}
+                      </h4>
+                      <p class="text-sm text-muted">
+                        {{ filledFieldsCount(item, decretoFields) }}/{{ decretoFields.length }} Decreto · {{ filledFieldsCount(item, ecaFields) }}/{{ ecaFields.length }} Eca
+                      </p>
+                    </div>
+                    <UIcon
+                      name="i-lucide-chevron-down"
+                      class="mt-1 size-4 shrink-0 transition-transform"
+                      :class="isItemExpanded(index) ? 'rotate-180' : ''"
+                    />
+                  </button>
+                  <UButton
+                    icon="i-lucide-trash-2"
+                    color="error"
+                    variant="ghost"
+                    type="button"
+                    :disabled="state.items.length === 1"
+                    aria-label="Eliminar item"
+                    @click="removeItem(index)"
+                  />
+                </div>
+              </template>
+
+              <div
+                v-if="isItemExpanded(index)"
+                class="space-y-4"
+              >
+                <UTabs
+                  :items="itemTabItems"
+                  class="w-full"
+                  :ui="{ trigger: 'gap-2' }"
                 >
-                  <td class="px-3 py-3 text-sm font-medium whitespace-nowrap">
-                    Item {{ index + 1 }}
-                  </td>
-                  <td class="px-3 py-3 min-w-56">
-                    <div class="text-sm font-medium">
-                      {{ itemContextLabel(item) }}
+                  <template #decreto>
+                    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                      <UFormField
+                        v-for="field in decretoFields"
+                        :key="field.key"
+                        :label="field.label"
+                        :name="`items.${index}.${field.key}`"
+                      >
+                        <UInput
+                          v-model="item[field.key]"
+                          class="w-full"
+                          :type="isNumberField(field.key) ? 'number' : 'text'"
+                          :step="isNumberField(field.key) ? '0.01' : undefined"
+                        />
+                      </UFormField>
                     </div>
-                    <div class="text-xs text-muted mt-1">
-                      {{ item.fechaMuestreo || 'Sin fecha de muestra' }}
+                  </template>
+
+                  <template #eca>
+                    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                      <UFormField
+                        v-for="field in ecaFields"
+                        :key="field.key"
+                        :label="field.label"
+                        :name="`items.${index}.${field.key}`"
+                      >
+                        <UInput
+                          v-model="item[field.key]"
+                          class="w-full"
+                        />
+                      </UFormField>
                     </div>
-                  </td>
-                  <td class="px-3 py-3 min-w-28">
-                    <UFormField :name="`items.${index}.decretoCloro`">
-                      <UInput
-                        v-model="item.decretoCloro"
-                        class="w-full"
-                        type="number"
-                        step="0.01"
-                      />
-                    </UFormField>
-                  </td>
-                  <td class="px-3 py-3 min-w-36">
-                    <UFormField :name="`items.${index}.decretoConductividad`">
-                      <UInput
-                        v-model="item.decretoConductividad"
-                        class="w-full"
-                        type="number"
-                        step="0.01"
-                      />
-                    </UFormField>
-                  </td>
-                  <td class="px-3 py-3 min-w-24">
-                    <UFormField :name="`items.${index}.decretoPh`">
-                      <UInput
-                        v-model="item.decretoPh"
-                        class="w-full"
-                        type="number"
-                        step="0.01"
-                      />
-                    </UFormField>
-                  </td>
-                  <td class="px-3 py-3 min-w-32">
-                    <UFormField :name="`items.${index}.decretoTemperatura`">
-                      <UInput
-                        v-model="item.decretoTemperatura"
-                        class="w-full"
-                        type="number"
-                        step="0.01"
-                      />
-                    </UFormField>
-                  </td>
-                  <td class="px-3 py-3 min-w-32">
-                    <UFormField :name="`items.${index}.decretoTurbiedad`">
-                      <UInput
-                        v-model="item.decretoTurbiedad"
-                        class="w-full"
-                        type="number"
-                        step="0.01"
-                      />
-                    </UFormField>
-                  </td>
-                  <td class="px-3 py-3 min-w-28">
-                    <UInput
-                      v-model="item.continuidadHorasDia"
-                      class="w-full"
-                    />
-                  </td>
-                  <td class="px-3 py-3 min-w-28">
-                    <UInput
-                      v-model="item.continuidadDiasSemana"
-                      class="w-full"
-                    />
-                  </td>
-                  <td class="px-3 py-3">
-                    <div class="flex justify-end">
-                      <UButton
-                        icon="i-lucide-trash-2"
-                        color="error"
-                        variant="ghost"
-                        type="button"
-                        :disabled="state.items.length === 1"
-                        aria-label="Eliminar item"
-                        @click="removeItem(index)"
-                      />
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                  </template>
+                </UTabs>
+              </div>
+            </UCard>
           </div>
         </div>
 

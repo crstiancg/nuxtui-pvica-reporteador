@@ -12,6 +12,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   'delete': [reporte: Reporte]
   'edit': [reporte: Reporte]
+  'view': [reporte: Reporte]
   'update:page': [value: number]
   'update:perPage': [value: number]
 }>()
@@ -123,6 +124,13 @@ const firstItemSummary = (reporte: Reporte) => {
               </td>
               <td class="px-4 py-3">
                 <div class="flex justify-end gap-2">
+                  <UButton
+                    icon="i-lucide-eye"
+                    color="neutral"
+                    variant="ghost"
+                    aria-label="Ver detalle del reporte"
+                    @click="emit('view', reporte)"
+                  />
                   <UButton
                     icon="i-lucide-pencil"
                     color="neutral"

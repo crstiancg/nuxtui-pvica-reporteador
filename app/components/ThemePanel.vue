@@ -115,9 +115,11 @@ function setColorMode(mode: 'light' | 'dark' | 'system') {
           <div class="grid grid-cols-3 gap-2">
             <button v-for="col in colors"
               :key="col.name"
-              variant="outline"
-              class="px-4 py-2 rounded-lg border text-xs font-medium flex items-center gap-2"
-              :color='selectedColor === col.name ? col.name : "neutral"'
+              type="button"
+              class="flex items-center gap-2 rounded-lg border px-4 py-2 text-xs font-medium transition-colors"
+              :class="selectedColor === col.name
+                ? 'border-primary bg-primary/10 text-primary'
+                : 'border-gray-300 text-gray-700 hover:border-gray-400 dark:border-gray-700 dark:text-gray-200'"
               @click="selectedColor = col.name">
               <span class="inline-block w-2 h-2 rounded-full"
                 :style="{ backgroundColor: `rgb(${col.rgb})` }"
@@ -165,8 +167,8 @@ function setColorMode(mode: 'light' | 'dark' | 'system') {
           <div class="grid grid-cols-3 gap-2">
             <UButton v-for="col in neutralColors"
               :key="col.name"
-              variant="outline"
-              :color="selectedNeutral === col.name ? col.name : 'neutral'"
+              :variant="selectedNeutral === col.name ? 'solid' : 'outline'"
+              color="neutral"
               @click="selectedNeutral = col.name">
               <span class="inline-block w-2 h-2 rounded-full"
                 :style="{ backgroundColor: `rgb(${col.rgb})` }"

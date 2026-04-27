@@ -92,14 +92,14 @@ export default eventHandler(async (event) => {
       url: avatarUrl,
       fileName,
     };
-  } catch (error: any) {
-    console.log({ error: error });
+  } catch (error: unknown) {
+    console.log({ error });
 
     // Errores de Zod
     if (error instanceof z.ZodError) {
       throw createError({
         statusCode: 400,
-        message: error.errors[0].message,
+        message: error.issues[0]?.message ?? "Archivo invalido",
       });
     }
 

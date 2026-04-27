@@ -12,10 +12,12 @@ const debouncedSearch = ref('')
 const page = ref(1)
 const perPage = ref(10)
 const isFormModalOpen = ref(false)
+const isPreviewModalOpen = ref(false)
 const isDeleteModalOpen = ref(false)
 const isSubmitting = ref(false)
 const isDeleting = ref(false)
 const editingReporte = ref<Reporte | null>(null)
+const previewReporte = ref<Reporte | null>(null)
 const deletingReporte = ref<Reporte | null>(null)
 let searchDebounceTimer: ReturnType<typeof setTimeout> | undefined
 
@@ -55,6 +57,10 @@ const openEditModal = async (reporte: Reporte) => {
   editingReporte.value = reporte
   await Promise.all([refreshPeriodos(), refreshCentros()])
   isFormModalOpen.value = true
+}
+const openPreviewModal = (reporte: Reporte) => {
+  previewReporte.value = reporte
+  isPreviewModalOpen.value = true
 }
 const openDeleteModal = (reporte: Reporte) => {
   deletingReporte.value = reporte
@@ -145,8 +151,13 @@ const deleteReporte = async () => {
           :reportes="reportes"
           :pending="pending"
           :total="total"
+          @preview="openPreviewModal"
           @edit="openEditModal"
           @delete="openDeleteModal"
+        />
+        <ReportePreviewModal
+          v-model:open="isPreviewModalOpen"
+          :reporte="previewReporte"
         />
         <ReporteFormModal
           v-model:open="isFormModalOpen"

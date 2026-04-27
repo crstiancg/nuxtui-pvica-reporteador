@@ -1,4 +1,5 @@
 import prisma from '~~/lib/prisma'
+import { buildReportePreview } from '~~/server/utils/reporte-preview'
 
 export default eventHandler(async (event) => {
   await requireAuthenticatedSession(event)
@@ -51,7 +52,7 @@ export default eventHandler(async (event) => {
 
   const where = filters.length ? { AND: filters } : undefined
 
-  const [total, reportes] = await prisma.$transaction([
+  const [total, reportes, parametros] = await prisma.$transaction([
     prisma.reporte.count({ where }),
     prisma.reporte.findMany({
       include: {
@@ -65,11 +66,20 @@ export default eventHandler(async (event) => {
       skip,
       take: perPage,
       orderBy: { id: 'desc' }
+    }),
+    prisma.parametro.findMany({
+      select: {
+        codigoCabecera: true,
+        valor: true
+      }
     })
   ])
 
   return {
-    data: reportes,
+    data: reportes.map(reporte => ({
+      ...reporte,
+      preview: buildReportePreview(reporte.items as Record<string, unknown>[], parametros)
+    })),
     meta: {
       page,
       perPage,

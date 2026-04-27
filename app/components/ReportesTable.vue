@@ -12,6 +12,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   'delete': [reporte: Reporte]
   'edit': [reporte: Reporte]
+  'preview': [reporte: Reporte]
   'view': [reporte: Reporte]
   'update:page': [value: number]
   'update:perPage': [value: number]
@@ -25,6 +26,27 @@ const showUpdating = computed(() => props.pending && props.reportes.length > 0)
 const periodoLabel = (reporte: Reporte) => reporte.periodo ? `${reporte.periodo.anio}-${String(reporte.periodo.mes).padStart(2, '0')}` : `#${reporte.periodoId}`
 const centroLabel = (reporte: Reporte) => reporte.centro ? `${reporte.centro.distrito} (${reporte.centro.codigoUbigeo})` : `#${reporte.centroId}`
 const itemCountLabel = (reporte: Reporte) => `${reporte.items.length} item${reporte.items.length === 1 ? '' : 's'}`
+const previewHighlights = (reporte: Reporte) => {
+  const preview = reporte.preview
+
+  if (!preview) {
+    return []
+  }
+
+  const preferredCodes = [
+    'decretoCloro',
+    'decretoConductividad',
+    'decretoPh',
+    'decretoTurbiedad',
+    'decretoAluminio'
+  ]
+
+  return preferredCodes
+    .map(code => [...preview.decreto, ...preview.eca].find(entry => entry.codigoCabecera === code))
+    .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry?.calculatedValue))
+    .slice(0, 3)
+}
+
 const firstItemSummary = (reporte: Reporte) => {
   const item = reporte.items[0]
 
@@ -116,6 +138,13 @@ const firstItemSummary = (reporte: Reporte) => {
               <td class="px-4 py-3 text-sm text-muted">
                 <div>{{ firstItemSummary(reporte) }}</div>
                 <div
+                  v-if="previewHighlights(reporte).length"
+                  class="mt-1 text-xs text-toned"
+                >
+                  Vista previa:
+                  {{ previewHighlights(reporte).map(entry => `${entry.label}: ${entry.calculatedValue}`).join(' | ') }}
+                </div>
+                <div
                   v-if="reporte.items.length > 1"
                   class="mt-1"
                 >
@@ -124,6 +153,13 @@ const firstItemSummary = (reporte: Reporte) => {
               </td>
               <td class="px-4 py-3">
                 <div class="flex justify-end gap-2">
+                  <UButton
+                    icon="i-lucide-calculator"
+                    color="primary"
+                    variant="ghost"
+                    aria-label="Ver vista previa del reporte"
+                    @click="emit('preview', reporte)"
+                  />
                   <UButton
                     icon="i-lucide-eye"
                     color="neutral"

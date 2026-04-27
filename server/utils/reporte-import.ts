@@ -1,7 +1,4 @@
-import { createRequire } from 'node:module'
-
-const require = createRequire(import.meta.url)
-const XLSX = require('xlsx') as typeof import('xlsx')
+import * as XLSX from 'xlsx'
 
 type ReporteItemImportInput = {
   codigoMuestreo: string | null

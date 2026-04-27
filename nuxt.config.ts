@@ -28,6 +28,14 @@ export default defineNuxtConfig({
   routeRules: {
     '/': { prerender: true }
   },
+
+  nitro: {
+    preset: 'netlify',
+    externals: {
+      inline: ['xlsx']
+    }
+  },
+
   compatibilityDate: '2025-01-15',
 
   eslint: {

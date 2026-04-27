@@ -55,7 +55,7 @@ const links = [
       }
     },
     {
-      label: 'Profile',
+      label: 'Perfil',
       to: '/admin/profile',
       icon: 'i-lucide-user',
       onSelect: () => {

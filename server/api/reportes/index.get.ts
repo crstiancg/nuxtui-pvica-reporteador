@@ -34,11 +34,11 @@ export default eventHandler(async (event) => {
           items: {
             some: {
               OR: [
-                { cloro: searchNumber },
-                { conductividad: searchNumber },
-                { ph: searchNumber },
-                { temperatura: searchNumber },
-                { turbiedad: searchNumber }
+                { decretoCloro: searchNumber },
+                { decretoConductividad: searchNumber },
+                { decretoPh: searchNumber },
+                { decretoTemperatura: searchNumber },
+                { decretoTurbiedad: searchNumber }
               ]
             }
           }

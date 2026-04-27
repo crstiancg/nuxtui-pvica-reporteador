@@ -29,7 +29,16 @@ const firstItemSummary = (reporte: Reporte) => {
 
   if (!item) return 'Sin items'
 
-  return `Cl ${item.cloro} | Cond ${item.conductividad} | PH ${item.ph} | Temp ${item.temperatura} | Turb ${item.turbiedad}`
+  const reference = item.lugarMuestreoNombre || item.lugarMuestreoUbicacion || item.codigoMuestra || 'Sin referencia'
+  const values = [
+    item.decretoCloro !== null ? `Cl ${item.decretoCloro}` : null,
+    item.decretoConductividad !== null ? `Cond ${item.decretoConductividad}` : null,
+    item.decretoPh !== null ? `PH ${item.decretoPh}` : null,
+    item.decretoTemperatura !== null ? `Temp ${item.decretoTemperatura}` : null,
+    item.decretoTurbiedad !== null ? `Turb ${item.decretoTurbiedad}` : null
+  ].filter(Boolean)
+
+  return values.length ? `${reference} | ${values.join(' | ')}` : reference
 }
 </script>
 

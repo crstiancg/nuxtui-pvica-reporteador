@@ -18,13 +18,91 @@ const emit = defineEmits<{
   'update:open': [value: boolean]
 }>()
 
+const numberFields = [
+  'decretoCloro',
+  'decretoConductividad',
+  'decretoPh',
+  'decretoTemperatura',
+  'decretoTurbiedad'
+] as const
+
 const createEmptyItem = (): ReporteItemSchemaType => ({
-  cloro: 0,
-  conductividad: 0,
-  ph: 7,
-  temperatura: 0,
-  turbiedad: 0
+  codigoMuestreo: null,
+  codigoMuestra: null,
+  coordenadaEste: null,
+  coordenadaNorte: null,
+  husoBanda: null,
+  altura: null,
+  estadoMuestreo: null,
+  fechaMuestreo: null,
+  fechaFinalizado: null,
+  lugarMuestreoId: null,
+  lugarMuestreoUbicacion: null,
+  lugarMuestreoNombre: null,
+  continuidadHorasDia: null,
+  continuidadDiasSemana: null,
+  decretoAluminio: null,
+  decretoBacteriasColiformesFecales: null,
+  decretoBacteriasColiformesTotales: null,
+  decretoBacteriasHeterotroficas: null,
+  decretoCloro: null,
+  decretoCobre: null,
+  decretoConductividad: null,
+  decretoCromoTotal: null,
+  decretoEColiNmp: null,
+  decretoHierro: null,
+  decretoHuevosLarvasHelmintos: null,
+  decretoManganeso: null,
+  decretoNitratos: null,
+  decretoNitritosExposicionCorta: null,
+  decretoOrganismosVidaLibre: null,
+  decretoPh: null,
+  decretoSolidosTotalesDisueltos: null,
+  decretoSulfatos: null,
+  decretoTemperatura: null,
+  decretoTurbiedad: null,
+  ecaAluminio: null,
+  ecaCobre: null,
+  ecaColiformesTermotolerantes: null,
+  ecaColiformesTotales: null,
+  ecaConductividad: null,
+  ecaCromoTotal: null,
+  ecaEscherichiaColi: null,
+  ecaFormasParasitarias: null,
+  ecaHierro: null,
+  ecaManganeso: null,
+  ecaNitratos: null,
+  ecaNitritos: null,
+  ecaOrganismosVidaLibre: null,
+  ecaPh: null,
+  ecaSulfatos: null,
+  ecaTemperatura: null,
+  ecaTurbiedad: null
 })
+
+const cloneItem = (item?: Partial<ReporteItemSchemaType> | null): ReporteItemSchemaType => ({
+  ...createEmptyItem(),
+  ...item
+})
+
+const normalizeOptionalNumber = (value: unknown) => {
+  if (value === null || value === undefined || value === '') {
+    return null
+  }
+
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+const serializeItem = (item: ReporteItemSchemaType): ReporteItemSchemaType => {
+  const serialized = cloneItem(item)
+
+  for (const field of numberFields) {
+    serialized[field] = normalizeOptionalNumber(item[field])
+  }
+
+  return serialized
+}
 
 const emptyState = (): ReporteSchemaType => ({
   periodoId: props.fixedPeriodo?.id ?? props.periodos[0]?.id ?? 0,
@@ -58,13 +136,7 @@ const resetState = () => {
           periodoId: props.fixedPeriodo?.id ?? props.reporte.periodoId,
           centroId: props.reporte.centroId,
           items: props.reporte.items.length
-            ? props.reporte.items.map(item => ({
-                cloro: item.cloro,
-                conductividad: item.conductividad,
-                ph: item.ph,
-                temperatura: item.temperatura,
-                turbiedad: item.turbiedad
-              }))
+            ? props.reporte.items.map(item => cloneItem(item))
             : [createEmptyItem()]
         }
       : emptyState()
@@ -85,16 +157,17 @@ const removeItem = (index: number) => {
   state.items.splice(index, 1)
 }
 
+const itemContextLabel = (item: ReporteItemSchemaType) =>
+  item.lugarMuestreoNombre
+  || item.lugarMuestreoUbicacion
+  || item.codigoMuestra
+  || item.codigoMuestreo
+  || 'Sin referencia'
+
 const submit = () => emit('submit', {
   periodoId: Number(state.periodoId),
   centroId: Number(state.centroId),
-  items: state.items.map(item => ({
-    cloro: Number(item.cloro),
-    conductividad: Number(item.conductividad),
-    ph: Number(item.ph),
-    temperatura: Number(item.temperatura),
-    turbiedad: Number(item.turbiedad)
-  }))
+  items: state.items.map(item => serializeItem(item))
 })
 </script>
 
@@ -154,7 +227,7 @@ const submit = () => emit('submit', {
                 Items del reporte
               </h3>
               <p class="text-sm text-muted">
-                Agrega todas las mediciones tomadas para este centro en el periodo.
+                La tabla edita los valores principales del bloque Decreto. Los demas campos del Excel se conservan en cada item.
               </p>
             </div>
             <UButton
@@ -168,11 +241,14 @@ const submit = () => emit('submit', {
           </div>
 
           <div class="overflow-x-auto rounded-lg border border-default/70">
-            <table class="min-w-[760px] w-full divide-y divide-default">
+            <table class="min-w-[1100px] w-full divide-y divide-default">
               <thead class="bg-default/40">
                 <tr class="text-left text-sm text-muted">
                   <th class="px-3 py-3 font-medium">
                     Item
+                  </th>
+                  <th class="px-3 py-3 font-medium">
+                    Referencia
                   </th>
                   <th class="px-3 py-3 font-medium">
                     Cloro
@@ -189,6 +265,12 @@ const submit = () => emit('submit', {
                   <th class="px-3 py-3 font-medium">
                     Turbiedad
                   </th>
+                  <th class="px-3 py-3 font-medium">
+                    Hrs/Dia
+                  </th>
+                  <th class="px-3 py-3 font-medium">
+                    Dias/Sem
+                  </th>
                   <th class="px-3 py-3 font-medium text-right">
                     Accion
                   </th>
@@ -203,13 +285,18 @@ const submit = () => emit('submit', {
                   <td class="px-3 py-3 text-sm font-medium whitespace-nowrap">
                     Item {{ index + 1 }}
                   </td>
+                  <td class="px-3 py-3 min-w-56">
+                    <div class="text-sm font-medium">
+                      {{ itemContextLabel(item) }}
+                    </div>
+                    <div class="text-xs text-muted mt-1">
+                      {{ item.fechaMuestreo || 'Sin fecha de muestra' }}
+                    </div>
+                  </td>
                   <td class="px-3 py-3 min-w-28">
-                    <UFormField
-                      :name="`items.${index}.cloro`"
-                      required
-                    >
+                    <UFormField :name="`items.${index}.decretoCloro`">
                       <UInput
-                        v-model="item.cloro"
+                        v-model="item.decretoCloro"
                         class="w-full"
                         type="number"
                         step="0.01"
@@ -217,12 +304,9 @@ const submit = () => emit('submit', {
                     </UFormField>
                   </td>
                   <td class="px-3 py-3 min-w-36">
-                    <UFormField
-                      :name="`items.${index}.conductividad`"
-                      required
-                    >
+                    <UFormField :name="`items.${index}.decretoConductividad`">
                       <UInput
-                        v-model="item.conductividad"
+                        v-model="item.decretoConductividad"
                         class="w-full"
                         type="number"
                         step="0.01"
@@ -230,12 +314,9 @@ const submit = () => emit('submit', {
                     </UFormField>
                   </td>
                   <td class="px-3 py-3 min-w-24">
-                    <UFormField
-                      :name="`items.${index}.ph`"
-                      required
-                    >
+                    <UFormField :name="`items.${index}.decretoPh`">
                       <UInput
-                        v-model="item.ph"
+                        v-model="item.decretoPh"
                         class="w-full"
                         type="number"
                         step="0.01"
@@ -243,12 +324,9 @@ const submit = () => emit('submit', {
                     </UFormField>
                   </td>
                   <td class="px-3 py-3 min-w-32">
-                    <UFormField
-                      :name="`items.${index}.temperatura`"
-                      required
-                    >
+                    <UFormField :name="`items.${index}.decretoTemperatura`">
                       <UInput
-                        v-model="item.temperatura"
+                        v-model="item.decretoTemperatura"
                         class="w-full"
                         type="number"
                         step="0.01"
@@ -256,17 +334,26 @@ const submit = () => emit('submit', {
                     </UFormField>
                   </td>
                   <td class="px-3 py-3 min-w-32">
-                    <UFormField
-                      :name="`items.${index}.turbiedad`"
-                      required
-                    >
+                    <UFormField :name="`items.${index}.decretoTurbiedad`">
                       <UInput
-                        v-model="item.turbiedad"
+                        v-model="item.decretoTurbiedad"
                         class="w-full"
                         type="number"
                         step="0.01"
                       />
                     </UFormField>
+                  </td>
+                  <td class="px-3 py-3 min-w-28">
+                    <UInput
+                      v-model="item.continuidadHorasDia"
+                      class="w-full"
+                    />
+                  </td>
+                  <td class="px-3 py-3 min-w-28">
+                    <UInput
+                      v-model="item.continuidadDiasSemana"
+                      class="w-full"
+                    />
                   </td>
                   <td class="px-3 py-3">
                     <div class="flex justify-end">

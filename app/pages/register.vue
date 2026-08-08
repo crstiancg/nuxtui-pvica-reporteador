@@ -6,7 +6,7 @@ import type { NuxtError } from "#app";
 import type { AuthFormField, FormSubmitEvent } from "@nuxt/ui";
 import * as z from "zod";
 
-const toast = useToast();
+const toast = useAppToast();
 
 const { fetch: refreshSession } = useUserSession();
 
@@ -67,17 +67,13 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
         password: payload.data.password,
       },
     });
-    toast.add({ title: "Success", description: "Registration successful" });
+    toast.success("Registro exitoso");
     await refreshSession();
 
     await navigateTo("/dashboard");
   } catch (error) {
     const err = error as NuxtError;
-    toast.add({
-      title: "Error",
-      description: err.statusMessage || "Registration failed 🚩",
-      color: "error",
-    });
+    toast.error("No se pudo completar el registro", err.statusMessage);
   }
 }
 </script>

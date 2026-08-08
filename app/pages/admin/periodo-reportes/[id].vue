@@ -8,7 +8,7 @@ definePageMeta({ middleware: 'authenticated', layout: 'dashboard-layout' })
 
 const route = useRoute()
 const router = useRouter()
-const toast = useToast()
+const toast = useAppToast()
 const periodoId = Number(route.params.id)
 
 if (!Number.isInteger(periodoId) || periodoId <= 0) {
@@ -109,13 +109,12 @@ const saveReporte = async (payload: ReporteSchemaType) => {
     await refresh()
     isFormModalOpen.value = false
     editingReporte.value = null
-    toast.add({ title: wasEditing ? 'Reporte actualizado' : 'Reporte creado', color: 'success' })
+    toast.success(wasEditing ? 'Reporte actualizado' : 'Reporte creado')
   } catch (error: unknown) {
-    toast.add({
-      title: 'No se pudo guardar el reporte',
-      description: typeof error === 'object' && error !== null && 'statusMessage' in error ? String(error.statusMessage) : 'Revisa los datos e intenta nuevamente',
-      color: 'error'
-    })
+    toast.error(
+      'No se pudo guardar el reporte',
+      typeof error === 'object' && error !== null && 'statusMessage' in error ? String(error.statusMessage) : 'Revisa los datos e intenta nuevamente'
+    )
   } finally {
     isSubmitting.value = false
   }
@@ -130,9 +129,9 @@ const deleteReporte = async () => {
     await refresh()
     isDeleteModalOpen.value = false
     deletingReporte.value = null
-    toast.add({ title: 'Reporte eliminado', color: 'success' })
+    toast.success('Reporte eliminado')
   } catch {
-    toast.add({ title: 'No se pudo eliminar el reporte', color: 'error' })
+    toast.error('No se pudo eliminar el reporte')
   } finally {
     isDeleting.value = false
   }
@@ -163,17 +162,15 @@ const importExcel = async (payload: { file: File, mode: 'append' | 'replace' }) 
     await refresh()
     isImportModalOpen.value = false
 
-    toast.add({
-      title: 'Importacion completada',
-      description: `${response.data.itemsImportados} items procesados en ${response.data.centrosAfectados} centros. Creados: ${response.data.reportesCreados}, actualizados: ${response.data.reportesActualizados}.`,
-      color: 'success'
-    })
+    toast.success(
+      'Importación completada',
+      `${response.data.itemsImportados} items procesados en ${response.data.centrosAfectados} centros. Creados: ${response.data.reportesCreados}, actualizados: ${response.data.reportesActualizados}.`
+    )
   } catch (error: unknown) {
-    toast.add({
-      title: 'No se pudo importar el Excel',
-      description: typeof error === 'object' && error !== null && 'statusMessage' in error ? String(error.statusMessage) : 'Revisa el archivo e intenta nuevamente',
-      color: 'error'
-    })
+    toast.error(
+      'No se pudo importar el Excel',
+      typeof error === 'object' && error !== null && 'statusMessage' in error ? String(error.statusMessage) : 'Revisa el archivo e intenta nuevamente'
+    )
   } finally {
     isImporting.value = false
   }

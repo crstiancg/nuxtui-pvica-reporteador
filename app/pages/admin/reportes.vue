@@ -6,7 +6,7 @@ import type { ReporteSchemaType } from '#shared/zod/reporte.schema'
 
 definePageMeta({ middleware: 'authenticated', layout: 'dashboard-layout' })
 
-const toast = useToast()
+const toast = useAppToast()
 const search = ref('')
 const debouncedSearch = ref('')
 const page = ref(1)
@@ -79,13 +79,12 @@ const saveReporte = async (payload: ReporteSchemaType) => {
     await refresh()
     isFormModalOpen.value = false
     editingReporte.value = null
-    toast.add({ title: wasEditing ? 'Reporte actualizado' : 'Reporte creado', color: 'success' })
+    toast.success(wasEditing ? 'Reporte actualizado' : 'Reporte creado')
   } catch (error: unknown) {
-    toast.add({
-      title: 'No se pudo guardar el reporte',
-      description: typeof error === 'object' && error !== null && 'statusMessage' in error ? String(error.statusMessage) : 'Revisa los datos e intenta nuevamente',
-      color: 'error'
-    })
+    toast.error(
+      'No se pudo guardar el reporte',
+      typeof error === 'object' && error !== null && 'statusMessage' in error ? String(error.statusMessage) : 'Revisa los datos e intenta nuevamente'
+    )
   } finally {
     isSubmitting.value = false
   }
@@ -99,9 +98,9 @@ const deleteReporte = async () => {
     await refresh()
     isDeleteModalOpen.value = false
     deletingReporte.value = null
-    toast.add({ title: 'Reporte eliminado', color: 'success' })
+    toast.success('Reporte eliminado')
   } catch {
-    toast.add({ title: 'No se pudo eliminar el reporte', color: 'error' })
+    toast.error('No se pudo eliminar el reporte')
   } finally {
     isDeleting.value = false
   }

@@ -7,7 +7,7 @@ definePageMeta({
   layout: 'dashboard-layout'
 })
 
-const toast = useToast()
+const toast = useAppToast()
 const search = ref('')
 const debouncedSearch = ref('')
 const page = ref(1)
@@ -85,19 +85,14 @@ const saveCentro = async (payload: CentroSchemaType) => {
     isFormModalOpen.value = false
     editingCentro.value = null
 
-    toast.add({
-      title: wasEditing ? 'Centro actualizado' : 'Centro creado',
-      color: 'success'
-    })
+    toast.success(wasEditing ? 'Centro actualizado' : 'Centro creado')
   } catch (error: unknown) {
-    toast.add({
-      title: 'No se pudo guardar el centro',
-      description:
-        typeof error === 'object' && error !== null && 'statusMessage' in error
-          ? String(error.statusMessage)
-          : 'Revisa los datos e intenta nuevamente',
-      color: 'error'
-    })
+    toast.error(
+      'No se pudo guardar el centro',
+      typeof error === 'object' && error !== null && 'statusMessage' in error
+        ? String(error.statusMessage)
+        : 'Revisa los datos e intenta nuevamente'
+    )
   } finally {
     isSubmitting.value = false
   }
@@ -119,15 +114,9 @@ const deleteCentro = async () => {
     isDeleteModalOpen.value = false
     deletingCentro.value = null
 
-    toast.add({
-      title: 'Centro eliminado',
-      color: 'success'
-    })
+    toast.success('Centro eliminado')
   } catch {
-    toast.add({
-      title: 'No se pudo eliminar el centro',
-      color: 'error'
-    })
+    toast.error('No se pudo eliminar el centro')
   } finally {
     isDeleting.value = false
   }

@@ -14,7 +14,7 @@ const profileState = reactive<Partial<ProfileSchemaType>>({
   bio: userDB.value?.bio || "",
 });
 
-const toast = useToast();
+const toast = useAppToast();
 const fileRef = ref<HTMLInputElement>();
 const selectedFile = ref<File | null>(null);
 
@@ -40,12 +40,7 @@ const onSubmit = async (event: FormSubmitEvent<ProfileSchemaType>) => {
       body: event.data,
     });
 
-    toast.add({
-      title: "Success",
-      description: "Your settings have been updated.",
-      icon: "i-lucide-check",
-      color: "success",
-    });
+    toast.success("Perfil actualizado", "Tus datos se guardaron correctamente.");
 
     // Refrescar la sesión
     await refreshSession();
@@ -53,13 +48,8 @@ const onSubmit = async (event: FormSubmitEvent<ProfileSchemaType>) => {
     // Limpiar el archivo seleccionado
     selectedFile.value = null;
   } catch (error) {
-    console.log({ error });
     const err = error as NuxtError;
-    toast.add({
-      title: "Error",
-      description: err.statusMessage || "Profile failed 🚩",
-      color: "error",
-    });
+    toast.error("No se pudo actualizar el perfil", err.statusMessage);
   }
 };
 

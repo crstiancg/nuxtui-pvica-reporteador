@@ -4,7 +4,7 @@ import type { PeriodoSchemaType } from '#shared/zod/periodo.schema'
 
 definePageMeta({ middleware: 'authenticated', layout: 'dashboard-layout' })
 
-const toast = useToast()
+const toast = useAppToast()
 const search = ref('')
 const debouncedSearch = ref('')
 const page = ref(1)
@@ -62,13 +62,12 @@ const savePeriodo = async (payload: PeriodoSchemaType) => {
     await refresh()
     isFormModalOpen.value = false
     editingPeriodo.value = null
-    toast.add({ title: wasEditing ? 'Periodo actualizado' : 'Periodo creado', color: 'success' })
+    toast.success(wasEditing ? 'Periodo actualizado' : 'Periodo creado')
   } catch (error: unknown) {
-    toast.add({
-      title: 'No se pudo guardar el periodo',
-      description: typeof error === 'object' && error !== null && 'statusMessage' in error ? String(error.statusMessage) : 'Revisa los datos e intenta nuevamente',
-      color: 'error'
-    })
+    toast.error(
+      'No se pudo guardar el periodo',
+      typeof error === 'object' && error !== null && 'statusMessage' in error ? String(error.statusMessage) : 'Revisa los datos e intenta nuevamente'
+    )
   } finally {
     isSubmitting.value = false
   }
@@ -82,9 +81,9 @@ const deletePeriodo = async () => {
     await refresh()
     isDeleteModalOpen.value = false
     deletingPeriodo.value = null
-    toast.add({ title: 'Periodo eliminado', color: 'success' })
+    toast.success('Periodo eliminado')
   } catch {
-    toast.add({ title: 'No se pudo eliminar el periodo', color: 'error' })
+    toast.error('No se pudo eliminar el periodo')
   } finally {
     isDeleting.value = false
   }

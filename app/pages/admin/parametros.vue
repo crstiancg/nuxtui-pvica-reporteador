@@ -4,7 +4,7 @@ import type { ParametroSchemaType } from '#shared/zod/parametro.schema'
 
 definePageMeta({ middleware: 'authenticated', layout: 'dashboard-layout' })
 
-const toast = useToast()
+const toast = useAppToast()
 const search = ref('')
 const debouncedSearch = ref('')
 const page = ref(1)
@@ -59,13 +59,12 @@ const saveParametro = async (payload: ParametroSchemaType) => {
     await refresh()
     isFormModalOpen.value = false
     editingParametro.value = null
-    toast.add({ title: wasEditing ? 'Parametro actualizado' : 'Parametro creado', color: 'success' })
+    toast.success(wasEditing ? 'Parametro actualizado' : 'Parametro creado')
   } catch (error: unknown) {
-    toast.add({
-      title: 'No se pudo guardar el parametro',
-      description: typeof error === 'object' && error !== null && 'statusMessage' in error ? String(error.statusMessage) : 'Revisa los datos e intenta nuevamente',
-      color: 'error'
-    })
+    toast.error(
+      'No se pudo guardar el parametro',
+      typeof error === 'object' && error !== null && 'statusMessage' in error ? String(error.statusMessage) : 'Revisa los datos e intenta nuevamente'
+    )
   } finally {
     isSubmitting.value = false
   }
@@ -79,9 +78,9 @@ const deleteParametro = async () => {
     await refresh()
     isDeleteModalOpen.value = false
     deletingParametro.value = null
-    toast.add({ title: 'Parametro eliminado', color: 'success' })
+    toast.success('Parametro eliminado')
   } catch {
-    toast.add({ title: 'No se pudo eliminar el parametro', color: 'error' })
+    toast.error('No se pudo eliminar el parametro')
   } finally {
     isDeleting.value = false
   }

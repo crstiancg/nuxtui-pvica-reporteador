@@ -15,17 +15,7 @@ const links = [
       exact: true,
     },
     {
-      label: "Members",
-      icon: "i-lucide-users",
-      to: "/admin/profile/members",
-    },
-    {
-      label: "Notifications",
-      icon: "i-lucide-bell",
-      to: "/admin/profile/notifications",
-    },
-    {
-      label: "Security",
+      label: "Seguridad",
       icon: "i-lucide-shield",
       to: "/admin/profile/security",
     },
@@ -47,7 +37,7 @@ const links = [
     :ui="{ body: 'lg:py-12' }"
   >
     <template #header>
-      <UDashboardNavbar title="Profile">
+      <UDashboardNavbar title="Mi perfil">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>

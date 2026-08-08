@@ -5,6 +5,7 @@ const IMPORT_MODES = ['append', 'replace'] as const
 
 export default eventHandler(async (event) => {
   await requireAuthenticatedSession(event)
+  await requirePermission(event, 'reportes.crear')
 
   const periodoId = Number(getRouterParam(event, 'id'))
 

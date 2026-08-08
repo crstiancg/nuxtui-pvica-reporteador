@@ -1,14 +1,7 @@
 import prisma from "~~/lib/prisma";
 
 export default eventHandler(async (event) => {
-  const session = await getUserSession(event);
-
-  if (!session?.user?.email) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: "Unauthorized",
-    });
-  }
+  const session = await requireAuthenticatedSession(event);
 
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
@@ -17,6 +10,7 @@ export default eventHandler(async (event) => {
       email: true,
       avatar: true,
       bio: true,
+      roles: { select: { id: true, name: true } },
     },
   });
 
@@ -32,5 +26,6 @@ export default eventHandler(async (event) => {
     email: user.email,
     avatar: user.avatar,
     bio: user.bio,
+    roles: user.roles,
   };
 });

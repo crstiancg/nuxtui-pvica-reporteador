@@ -7,6 +7,7 @@ import type { ReporteSchemaType } from '#shared/zod/reporte.schema'
 definePageMeta({ middleware: 'authenticated', layout: 'dashboard-layout' })
 
 const toast = useAppToast()
+const { can } = usePermissions()
 const search = ref('')
 const debouncedSearch = ref('')
 const page = ref(1)
@@ -119,6 +120,7 @@ const deleteReporte = async () => {
         </template>
         <template #right>
           <UButton
+            v-if="can('reportes.crear')"
             icon="i-lucide-plus"
             label="Nuevo reporte"
             @click="openCreateModal"

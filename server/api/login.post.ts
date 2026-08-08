@@ -37,10 +37,13 @@ export default defineEventHandler(async (event) => {
 
   console.log("Login successful");
 
+  const permissions = await getUserPermissionNames(email);
+
   await setUserSession(event, {
     user: {
       name: user.name || email.split("@")[0],
       email,
+      permissions,
     },
   });
 

@@ -3,6 +3,7 @@ declare module "#auth-utils" {
   interface User {
     name: string;
     email: string;
+    permissions: string[];
   }
 
   interface UserSession {

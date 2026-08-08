@@ -8,6 +8,7 @@ definePageMeta({
 })
 
 const toast = useAppToast()
+const { can } = usePermissions()
 const search = ref('')
 const debouncedSearch = ref('')
 const page = ref(1)
@@ -136,6 +137,7 @@ const deleteCentro = async () => {
 
         <template #right>
           <UButton
+            v-if="can('centros.crear')"
             icon="i-lucide-plus"
             label="Nuevo centro"
             @click="openCreateModal"

@@ -38,6 +38,7 @@ export default eventHandler(async (event) => {
     user: {
       name: email.split("@")[0],
       email,
+      permissions: [],
     },
   });
 

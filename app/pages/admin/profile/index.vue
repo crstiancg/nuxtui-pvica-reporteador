@@ -3,16 +3,30 @@ import type { NuxtError } from "#app";
 import type { ProfileSchemaType } from "#shared/zod/profile.schema";
 import { ProfileSchema } from "#shared/zod/profile.schema";
 import type { FormSubmitEvent } from "@nuxt/ui";
-import type { User } from "@prisma/client";
 
-const { user, fetch: refreshSession } = useUserSession();
-const { data: userDB } = await useFetch<User>("/api/user/profile");
+definePageMeta({
+  middleware: "authenticated",
+  layout: "dashboard-layout",
+});
+
+type ProfileResponse = {
+  name: string | null
+  email: string
+  avatar: string | null
+  bio: string | null
+  roles: { id: number, name: string }[]
+};
+
+const { fetch: refreshSession } = useUserSession();
+const { data: userDB } = await useFetch<ProfileResponse>("/api/user/profile");
 
 const profileState = reactive<Partial<ProfileSchemaType>>({
-  username: user?.value?.name || "",
+  username: userDB.value?.name || "",
   avatar: userDB.value?.avatar || "",
   bio: userDB.value?.bio || "",
 });
+
+const roles = computed(() => userDB.value?.roles ?? []);
 
 const toast = useAppToast();
 const fileRef = ref<HTMLInputElement>();
@@ -75,39 +89,50 @@ function onFileClick() {
 <template>
   <UForm
     id="settingForm"
-    @submit="onSubmit"
     :schema="ProfileSchema"
     :state="profileState"
+    class="flex flex-col gap-4 w-full"
+    @submit="onSubmit"
   >
     <UPageCard
-      variant="subtle"
-      class="mb-4"
-    >
-      {{ user }}
-    </UPageCard>
-
-    <UPageCard
-      title="Profile Form"
-      description="Update your profile information."
+      title="Datos de la cuenta"
       orientation="horizontal"
-      class="mb-4"
       variant="subtle"
     >
+      <template #description>
+        <div class="flex flex-wrap items-center gap-2 mt-1">
+          <span class="text-sm text-muted">{{ userDB?.email }}</span>
+          <template v-if="roles.length">
+            <UBadge
+              v-for="role in roles"
+              :key="role.id"
+              :label="role.name"
+              color="neutral"
+              variant="subtle"
+            />
+          </template>
+          <span
+            v-else
+            class="text-sm text-muted"
+          >Sin rol asignado</span>
+        </div>
+      </template>
+
       <UButton
         form="settingForm"
         color="neutral"
         type="submit"
         class="w-fit lg:ms-auto"
       >
-        Save Changes
+        Guardar cambios
       </UButton>
     </UPageCard>
 
     <UPageCard variant="subtle">
       <UFormField
         name="username"
-        label="Username"
-        description="This is your public username."
+        label="Nombre"
+        description="Como te veran los demas en el sistema."
         required
         class="flex max-sm:flex-col justify-between items-start gap-4"
       >
@@ -120,8 +145,8 @@ function onFileClick() {
       <USeparator />
       <UFormField
         name="avatar"
-        label="Avatar"
-        description="JPG, GIF or PNG. 1MB Max."
+        label="Foto de perfil"
+        description="JPG, GIF o PNG. Maximo 1MB."
         class="flex max-sm:flex-col justify-between sm:items-center gap-4"
       >
         <div class="flex flex-wrap items-center gap-3">
@@ -131,7 +156,7 @@ function onFileClick() {
             size="lg"
           />
           <UButton
-            label="Choose"
+            label="Elegir imagen"
             color="neutral"
             @click="onFileClick"
           />
@@ -141,14 +166,14 @@ function onFileClick() {
             class="hidden"
             accept=".jpg, .jpeg, .png, .gif"
             @change="onFileChange"
-          />
+          >
         </div>
       </UFormField>
       <USeparator />
       <UFormField
         name="bio"
-        label="Bio"
-        description="Brief description for your profile. URLs are hyperlinked."
+        label="Acerca de ti"
+        description="Informacion adicional visible para el equipo (opcional)."
         class="flex max-sm:flex-col justify-between items-start gap-4"
         :ui="{ container: 'w-full' }"
       >

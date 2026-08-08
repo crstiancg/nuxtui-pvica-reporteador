@@ -9,6 +9,7 @@ definePageMeta({ middleware: 'authenticated', layout: 'dashboard-layout' })
 const route = useRoute()
 const router = useRouter()
 const toast = useAppToast()
+const { can } = usePermissions()
 const periodoId = Number(route.params.id)
 
 if (!Number.isInteger(periodoId) || periodoId <= 0) {
@@ -196,6 +197,7 @@ const importExcel = async (payload: { file: File, mode: 'append' | 'replace' }) 
             @click="router.push('/admin/periodos')"
           />
           <UButton
+            v-if="can('reportes.crear')"
             color="neutral"
             variant="soft"
             icon="i-lucide-file-spreadsheet"
@@ -203,6 +205,7 @@ const importExcel = async (payload: { file: File, mode: 'append' | 'replace' }) 
             @click="openImportModal"
           />
           <UButton
+            v-if="can('reportes.crear')"
             icon="i-lucide-plus"
             label="Nuevo reporte"
             @click="openCreateModal"

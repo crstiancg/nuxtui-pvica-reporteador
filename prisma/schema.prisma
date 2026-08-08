@@ -26,10 +26,38 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relaciones
-  posts    Post[]
-  accounts Account[] // Múltiples cuentas (GitHub, Google, etc.)
+  posts       Post[]
+  accounts    Account[] // Múltiples cuentas (GitHub, Google, etc.)
+  roles       Role[] // Roles asignados al usuario
+  permissions Permission[] // Permisos asignados directamente al usuario (override del rol)
 
   @@map("users") // La tabla se llama "users" en la BD
+}
+
+model Role {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique @db.VarChar(50) // "admin", "editor", "viewer"
+  description String?
+  permissions Permission[]
+  users       User[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("roles")
+}
+
+model Permission {
+  id          Int     @id @default(autoincrement())
+  name        String  @unique @db.VarChar(100) // "centros.crear", "reportes.eliminar"
+  description String?
+  roles       Role[]
+  users       User[] // Usuarios con este permiso asignado directamente
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("permissions")
 }
 
 model Account {
@@ -54,19 +82,19 @@ model Post {
 }
 
 model Centro {
-  id           Int      @id @default(autoincrement())
-  departamento String   @db.VarChar(100)
-  provincia    String   @db.VarChar(100)
-  distrito     String   @db.VarChar(100)
-  codigoUbigeo String   @unique @map("codigo_ubigeo") @db.VarChar(10)
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id           Int       @id @default(autoincrement())
+  departamento String    @db.VarChar(100)
+  provincia    String    @db.VarChar(100)
+  distrito     String    @db.VarChar(100)
+  codigoUbigeo String    @unique @map("codigo_ubigeo") @db.VarChar(10)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
   reportes     Reporte[]
 
   @@map("centros")
 }
 
-  model Periodo {
+model Periodo {
   id        Int       @id @default(autoincrement())
   anio      Int
   mes       Int
@@ -85,73 +113,73 @@ model Reporte {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  periodo Periodo @relation(fields: [periodoId], references: [id], onDelete: Cascade)
-  centro  Centro  @relation(fields: [centroId], references: [id], onDelete: Cascade)
+  periodo Periodo       @relation(fields: [periodoId], references: [id], onDelete: Cascade)
+  centro  Centro        @relation(fields: [centroId], references: [id], onDelete: Cascade)
   items   ReporteItem[]
 
+  @@unique([periodoId, centroId])
   @@index([periodoId])
   @@index([centroId])
-  @@unique([periodoId, centroId])
   @@map("reportes")
 }
 
 model ReporteItem {
-  id                          Int      @id @default(autoincrement())
-  reporteId                   Int      @map("reporte_id")
-  codigoMuestreo              String?  @map("codigo_muestreo")
-  codigoMuestra               String?  @map("codigo_muestra")
-  coordenadaEste              String?  @map("coordenada_este")
-  coordenadaNorte             String?  @map("coordenada_norte")
-  husoBanda                   String?  @map("huso_banda")
-  altura                      String?
-  estadoMuestreo              String?  @map("estado_muestreo")
-  fechaMuestreo               String?  @map("fecha_muestreo")
-  fechaFinalizado             String?  @map("fecha_finalizado")
-  lugarMuestreoId             String?  @map("lugar_muestreo_id")
-  lugarMuestreoUbicacion      String?  @map("lugar_muestreo_ubicacion")
-  lugarMuestreoNombre         String?  @map("lugar_muestreo_nombre")
-  continuidadHorasDia         String?  @map("continuidad_horas_dia")
-  continuidadDiasSemana       String?  @map("continuidad_dias_semana")
-  decretoAluminio             String?  @map("decreto_aluminio")
-  decretoBacteriasColiformesFecales String? @map("decreto_bacterias_coliformes_fecales")
-  decretoBacteriasColiformesTotales String? @map("decreto_bacterias_coliformes_totales")
-  decretoBacteriasHeterotroficas String? @map("decreto_bacterias_heterotroficas")
-  decretoCloro                Float?   @map("decreto_cloro")
-  decretoCobre                String?  @map("decreto_cobre")
-  decretoConductividad        Float?   @map("decreto_conductividad")
-  decretoCromoTotal           String?  @map("decreto_cromo_total")
-  decretoEColiNmp             String?  @map("decreto_e_coli_nmp")
-  decretoHierro               String?  @map("decreto_hierro")
-  decretoHuevosLarvasHelmintos String? @map("decreto_huevos_larvas_helmintos")
-  decretoManganeso            String?  @map("decreto_manganeso")
-  decretoNitratos             String?  @map("decreto_nitratos")
-  decretoNitritosExposicionCorta String? @map("decreto_nitritos_exposicion_corta")
-  decretoOrganismosVidaLibre  String?  @map("decreto_organismos_vida_libre")
-  decretoPh                   Float?   @map("decreto_ph")
-  decretoSolidosTotalesDisueltos String? @map("decreto_solidos_totales_disueltos")
-  decretoSulfatos             String?  @map("decreto_sulfatos")
-  decretoTemperatura          Float?   @map("decreto_temperatura")
-  decretoTurbiedad            Float?   @map("decreto_turbiedad")
-  ecaAluminio                 String?  @map("eca_aluminio")
-  ecaCobre                    String?  @map("eca_cobre")
-  ecaColiformesTermotolerantes String? @map("eca_coliformes_termotolerantes")
-  ecaColiformesTotales        String?  @map("eca_coliformes_totales")
-  ecaConductividad            String?  @map("eca_conductividad")
-  ecaCromoTotal               String?  @map("eca_cromo_total")
-  ecaEscherichiaColi          String?  @map("eca_escherichia_coli")
-  ecaFormasParasitarias       String?  @map("eca_formas_parasitarias")
-  ecaHierro                   String?  @map("eca_hierro")
-  ecaManganeso                String?  @map("eca_manganeso")
-  ecaNitratos                 String?  @map("eca_nitratos")
-  ecaNitritos                 String?  @map("eca_nitritos")
-  ecaOrganismosVidaLibre      String?  @map("eca_organismos_vida_libre")
-  ecaPh                       String?  @map("eca_ph")
-  ecaSulfatos                 String?  @map("eca_sulfatos")
-  ecaTemperatura              String?  @map("eca_temperatura")
-  ecaTurbiedad                String?  @map("eca_turbiedad")
-  reporte Reporte @relation(fields: [reporteId], references: [id], onDelete: Cascade)
-  createdAt                   DateTime @default(now()) @map("created_at")
-  updatedAt                   DateTime @updatedAt @map("updated_at")
+  id                                Int      @id @default(autoincrement())
+  reporteId                         Int      @map("reporte_id")
+  codigoMuestreo                    String?  @map("codigo_muestreo")
+  codigoMuestra                     String?  @map("codigo_muestra")
+  coordenadaEste                    String?  @map("coordenada_este")
+  coordenadaNorte                   String?  @map("coordenada_norte")
+  husoBanda                         String?  @map("huso_banda")
+  altura                            String?
+  estadoMuestreo                    String?  @map("estado_muestreo")
+  fechaMuestreo                     String?  @map("fecha_muestreo")
+  fechaFinalizado                   String?  @map("fecha_finalizado")
+  lugarMuestreoId                   String?  @map("lugar_muestreo_id")
+  lugarMuestreoUbicacion            String?  @map("lugar_muestreo_ubicacion")
+  lugarMuestreoNombre               String?  @map("lugar_muestreo_nombre")
+  continuidadHorasDia               String?  @map("continuidad_horas_dia")
+  continuidadDiasSemana             String?  @map("continuidad_dias_semana")
+  decretoAluminio                   String?  @map("decreto_aluminio")
+  decretoBacteriasColiformesFecales String?  @map("decreto_bacterias_coliformes_fecales")
+  decretoBacteriasColiformesTotales String?  @map("decreto_bacterias_coliformes_totales")
+  decretoBacteriasHeterotroficas    String?  @map("decreto_bacterias_heterotroficas")
+  decretoCloro                      Float?   @map("decreto_cloro")
+  decretoCobre                      String?  @map("decreto_cobre")
+  decretoConductividad              Float?   @map("decreto_conductividad")
+  decretoCromoTotal                 String?  @map("decreto_cromo_total")
+  decretoEColiNmp                   String?  @map("decreto_e_coli_nmp")
+  decretoHierro                     String?  @map("decreto_hierro")
+  decretoHuevosLarvasHelmintos      String?  @map("decreto_huevos_larvas_helmintos")
+  decretoManganeso                  String?  @map("decreto_manganeso")
+  decretoNitratos                   String?  @map("decreto_nitratos")
+  decretoNitritosExposicionCorta    String?  @map("decreto_nitritos_exposicion_corta")
+  decretoOrganismosVidaLibre        String?  @map("decreto_organismos_vida_libre")
+  decretoPh                         Float?   @map("decreto_ph")
+  decretoSolidosTotalesDisueltos    String?  @map("decreto_solidos_totales_disueltos")
+  decretoSulfatos                   String?  @map("decreto_sulfatos")
+  decretoTemperatura                Float?   @map("decreto_temperatura")
+  decretoTurbiedad                  Float?   @map("decreto_turbiedad")
+  ecaAluminio                       String?  @map("eca_aluminio")
+  ecaCobre                          String?  @map("eca_cobre")
+  ecaColiformesTermotolerantes      String?  @map("eca_coliformes_termotolerantes")
+  ecaColiformesTotales              String?  @map("eca_coliformes_totales")
+  ecaConductividad                  String?  @map("eca_conductividad")
+  ecaCromoTotal                     String?  @map("eca_cromo_total")
+  ecaEscherichiaColi                String?  @map("eca_escherichia_coli")
+  ecaFormasParasitarias             String?  @map("eca_formas_parasitarias")
+  ecaHierro                         String?  @map("eca_hierro")
+  ecaManganeso                      String?  @map("eca_manganeso")
+  ecaNitratos                       String?  @map("eca_nitratos")
+  ecaNitritos                       String?  @map("eca_nitritos")
+  ecaOrganismosVidaLibre            String?  @map("eca_organismos_vida_libre")
+  ecaPh                             String?  @map("eca_ph")
+  ecaSulfatos                       String?  @map("eca_sulfatos")
+  ecaTemperatura                    String?  @map("eca_temperatura")
+  ecaTurbiedad                      String?  @map("eca_turbiedad")
+  reporte                           Reporte  @relation(fields: [reporteId], references: [id], onDelete: Cascade)
+  createdAt                         DateTime @default(now()) @map("created_at")
+  updatedAt                         DateTime @updatedAt @map("updated_at")
 
   @@index([reporteId])
   @@map("reporte_items")

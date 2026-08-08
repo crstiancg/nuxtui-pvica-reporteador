@@ -3,6 +3,7 @@ import prisma from '~~/lib/prisma'
 
 export default eventHandler(async (event) => {
   await requireAuthenticatedSession(event)
+  await requirePermission(event, 'centros.crear')
 
   const body = await readValidatedBody(event, centroSchema.parse)
 

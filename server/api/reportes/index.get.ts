@@ -3,6 +3,7 @@ import { buildReportePreview } from '~~/server/utils/reporte-preview'
 
 export default eventHandler(async (event) => {
   await requireAuthenticatedSession(event)
+  await requirePermission(event, 'reportes.ver')
 
   const query = getQuery(event)
   const search = typeof query.search === 'string' ? query.search.trim() : ''

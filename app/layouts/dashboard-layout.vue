@@ -15,9 +15,17 @@ const links = [
       }
     },
     {
-      label: 'Users',
+      label: 'Usuarios',
       to: '/admin/users',
       icon: 'i-lucide-users',
+      onSelect: () => {
+        open.value = false
+      }
+    },
+    {
+      label: 'Roles',
+      to: '/admin/roles',
+      icon: 'i-lucide-shield',
       onSelect: () => {
         open.value = false
       }

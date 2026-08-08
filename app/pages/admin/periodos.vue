@@ -5,6 +5,7 @@ import type { PeriodoSchemaType } from '#shared/zod/periodo.schema'
 definePageMeta({ middleware: 'authenticated', layout: 'dashboard-layout' })
 
 const toast = useAppToast()
+const { can } = usePermissions()
 const search = ref('')
 const debouncedSearch = ref('')
 const page = ref(1)
@@ -95,7 +96,7 @@ const deletePeriodo = async () => {
     <template #header>
       <UDashboardNavbar title="Periodos">
         <template #leading><UDashboardSidebarCollapse /></template>
-        <template #right><UButton icon="i-lucide-plus" label="Nuevo periodo" @click="openCreateModal" /></template>
+        <template #right><UButton v-if="can('periodos.crear')" icon="i-lucide-plus" label="Nuevo periodo" @click="openCreateModal" /></template>
       </UDashboardNavbar>
     </template>
     <template #body>

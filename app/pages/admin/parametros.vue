@@ -5,6 +5,7 @@ import type { ParametroSchemaType } from '#shared/zod/parametro.schema'
 definePageMeta({ middleware: 'authenticated', layout: 'dashboard-layout' })
 
 const toast = useAppToast()
+const { can } = usePermissions()
 const search = ref('')
 const debouncedSearch = ref('')
 const page = ref(1)
@@ -92,7 +93,7 @@ const deleteParametro = async () => {
     <template #header>
       <UDashboardNavbar title="Parametros">
         <template #leading><UDashboardSidebarCollapse /></template>
-        <template #right><UButton icon="i-lucide-plus" label="Nuevo parametro" @click="openCreateModal" /></template>
+        <template #right><UButton v-if="can('parametros.crear')" icon="i-lucide-plus" label="Nuevo parametro" @click="openCreateModal" /></template>
       </UDashboardNavbar>
     </template>
     <template #body>

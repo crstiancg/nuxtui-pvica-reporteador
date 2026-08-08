@@ -3,6 +3,7 @@ import prisma from '~~/lib/prisma'
 
 export default eventHandler(async (event) => {
   await requireAuthenticatedSession(event)
+  await requirePermission(event, 'reportes.crear')
 
   const body = await readValidatedBody(event, reporteSchema.parse)
 

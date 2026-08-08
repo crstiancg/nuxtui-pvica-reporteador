@@ -21,6 +21,8 @@ const currentPage = computed({ get: () => props.page, set: value => emit('update
 const currentPerPage = computed({ get: () => props.perPage, set: value => emit('update:perPage', value) })
 const showInitialLoading = computed(() => props.pending && !props.periodos.length)
 const showUpdating = computed(() => props.pending && props.periodos.length > 0)
+
+const { can } = usePermissions()
 </script>
 
 <template>
@@ -58,8 +60,8 @@ const showUpdating = computed(() => props.pending && props.periodos.length > 0)
               <td class="px-4 py-3">
                 <div class="flex justify-end gap-2">
                   <UButton icon="i-lucide-file-text" color="neutral" variant="ghost" aria-label="Ver reportes del periodo" :to="`/admin/periodo-reportes/${periodo.id}`" />
-                  <UButton icon="i-lucide-pencil" color="neutral" variant="ghost" aria-label="Editar periodo" @click="emit('edit', periodo)" />
-                  <UButton icon="i-lucide-trash-2" color="error" variant="ghost" aria-label="Eliminar periodo" @click="emit('delete', periodo)" />
+                  <UButton v-if="can('periodos.editar')" icon="i-lucide-pencil" color="neutral" variant="ghost" aria-label="Editar periodo" @click="emit('edit', periodo)" />
+                  <UButton v-if="can('periodos.eliminar')" icon="i-lucide-trash-2" color="error" variant="ghost" aria-label="Eliminar periodo" @click="emit('delete', periodo)" />
                 </div>
               </td>
             </tr>

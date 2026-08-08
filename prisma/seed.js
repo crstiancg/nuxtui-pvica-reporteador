@@ -160,6 +160,65 @@ const parametros = [
   { codigoCabecera: "ecaTurbiedad", valor: "Máximo" },
 ];
 
+const resources = ["centros", "periodos", "reportes", "parametros", "usuarios"];
+const actions = ["ver", "crear", "editar", "eliminar"];
+const allPermissionNames = resources.flatMap(resource => actions.map(action => `${resource}.${action}`));
+
+const roleDefinitions = [
+  {
+    name: "admin",
+    description: "Acceso total al sistema",
+    permissions: allPermissionNames,
+  },
+  {
+    name: "editor",
+    description: "Puede ver, crear y editar centros, periodos, reportes y parametros",
+    permissions: resources
+      .filter(resource => resource !== "usuarios")
+      .flatMap(resource => ["ver", "crear", "editar"].map(action => `${resource}.${action}`)),
+  },
+  {
+    name: "viewer",
+    description: "Solo puede ver la informacion",
+    permissions: resources.map(resource => `${resource}.ver`),
+  },
+];
+
+async function seedRoles() {
+  for (const name of allPermissionNames) {
+    const [resource, action] = name.split(".");
+
+    await prisma.permission.upsert({
+      where: { name },
+      update: {},
+      create: {
+        name,
+        description: `Permite ${action} en ${resource}`,
+      },
+    });
+  }
+
+  for (const roleDef of roleDefinitions) {
+    const permissionsData = { connect: roleDef.permissions.map(name => ({ name })) };
+
+    await prisma.role.upsert({
+      where: { name: roleDef.name },
+      update: {
+        description: roleDef.description,
+        permissions: { set: roleDef.permissions.map(name => ({ name })) },
+      },
+      create: {
+        name: roleDef.name,
+        description: roleDef.description,
+        permissions: permissionsData,
+      },
+    });
+  }
+
+  console.log(`Permissions ready: ${allPermissionNames.length}`);
+  console.log(`Roles ready: ${roleDefinitions.map(r => r.name).join(", ")}`);
+}
+
 async function seedDefaultUser() {
   const hashedPassword = await bcrypt.hash(defaultUser.password, 10);
 
@@ -171,16 +230,18 @@ async function seedDefaultUser() {
       name: defaultUser.name,
       password: hashedPassword,
       emailVerified: true,
+      roles: { connect: { name: "admin" } },
     },
     create: {
       email: defaultUser.email,
       name: defaultUser.name,
       password: hashedPassword,
       emailVerified: true,
+      roles: { connect: { name: "admin" } },
     },
   });
 
-  console.log(`Default user ready: ${defaultUser.email}`);
+  console.log(`Default user ready: ${defaultUser.email} (admin)`);
 }
 
 async function seedCentros() {
@@ -238,6 +299,7 @@ async function seedParametros() {
 }
 
 async function main() {
+  await seedRoles();
   await seedDefaultUser();
   await seedCentros();
   await seedParametros();

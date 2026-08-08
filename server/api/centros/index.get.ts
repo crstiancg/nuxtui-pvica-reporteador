@@ -14,6 +14,7 @@ const parsePositiveInteger = (value: unknown, fallback: number) => {
 
 export default eventHandler(async (event) => {
   await requireAuthenticatedSession(event)
+  await requirePermission(event, 'centros.ver')
 
   const query = getQuery(event)
   const search = typeof query.search === 'string' ? query.search.trim() : ''

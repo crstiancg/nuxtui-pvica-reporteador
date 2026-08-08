@@ -23,6 +23,8 @@ const currentPage = computed({ get: () => props.page, set: value => emit('update
 const currentPerPage = computed({ get: () => props.perPage, set: value => emit('update:perPage', value) })
 const showInitialLoading = computed(() => props.pending && !props.reportes.length)
 const showUpdating = computed(() => props.pending && props.reportes.length > 0)
+
+const { can } = usePermissions()
 const periodoLabel = (reporte: Reporte) => reporte.periodo ? `${reporte.periodo.anio}-${String(reporte.periodo.mes).padStart(2, '0')}` : `#${reporte.periodoId}`
 const centroLabel = (reporte: Reporte) => reporte.centro ? `${reporte.centro.distrito} (${reporte.centro.codigoUbigeo})` : `#${reporte.centroId}`
 const itemCountLabel = (reporte: Reporte) => `${reporte.items.length} item${reporte.items.length === 1 ? '' : 's'}`
@@ -168,6 +170,7 @@ const firstItemSummary = (reporte: Reporte) => {
                     @click="emit('view', reporte)"
                   />
                   <UButton
+                    v-if="can('reportes.editar')"
                     icon="i-lucide-pencil"
                     color="neutral"
                     variant="ghost"
@@ -175,6 +178,7 @@ const firstItemSummary = (reporte: Reporte) => {
                     @click="emit('edit', reporte)"
                   />
                   <UButton
+                    v-if="can('reportes.eliminar')"
                     icon="i-lucide-trash-2"
                     color="error"
                     variant="ghost"

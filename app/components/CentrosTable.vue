@@ -30,6 +30,8 @@ const currentPerPage = computed({
 
 const showInitialLoading = computed(() => props.pending && !props.centros.length)
 const showUpdating = computed(() => props.pending && props.centros.length > 0)
+
+const { can } = usePermissions()
 </script>
 
 <template>
@@ -112,6 +114,7 @@ const showUpdating = computed(() => props.pending && props.centros.length > 0)
               <td class="px-4 py-3">
                 <div class="flex justify-end gap-2">
                   <UButton
+                    v-if="can('centros.editar')"
                     icon="i-lucide-pencil"
                     color="neutral"
                     variant="ghost"
@@ -119,6 +122,7 @@ const showUpdating = computed(() => props.pending && props.centros.length > 0)
                     @click="emit('edit', centro)"
                   />
                   <UButton
+                    v-if="can('centros.eliminar')"
                     icon="i-lucide-trash-2"
                     color="error"
                     variant="ghost"

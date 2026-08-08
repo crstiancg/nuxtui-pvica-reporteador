@@ -21,6 +21,8 @@ const currentPage = computed({ get: () => props.page, set: value => emit('update
 const currentPerPage = computed({ get: () => props.perPage, set: value => emit('update:perPage', value) })
 const showInitialLoading = computed(() => props.pending && !props.parametros.length)
 const showUpdating = computed(() => props.pending && props.parametros.length > 0)
+
+const { can } = usePermissions()
 </script>
 
 <template>
@@ -53,8 +55,8 @@ const showUpdating = computed(() => props.pending && props.parametros.length > 0
               <td class="px-4 py-3">{{ parametro.valor }}</td>
               <td class="px-4 py-3">
                 <div class="flex justify-end gap-2">
-                  <UButton icon="i-lucide-pencil" color="neutral" variant="ghost" aria-label="Editar parametro" @click="emit('edit', parametro)" />
-                  <UButton icon="i-lucide-trash-2" color="error" variant="ghost" aria-label="Eliminar parametro" @click="emit('delete', parametro)" />
+                  <UButton v-if="can('parametros.editar')" icon="i-lucide-pencil" color="neutral" variant="ghost" aria-label="Editar parametro" @click="emit('edit', parametro)" />
+                  <UButton v-if="can('parametros.eliminar')" icon="i-lucide-trash-2" color="error" variant="ghost" aria-label="Eliminar parametro" @click="emit('delete', parametro)" />
                 </div>
               </td>
             </tr>

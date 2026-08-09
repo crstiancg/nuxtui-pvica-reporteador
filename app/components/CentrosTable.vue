@@ -64,7 +64,13 @@ const { can } = usePermissions()
               Distrito
             </th>
             <th class="px-4 py-3 font-medium">
+              Centro poblado
+            </th>
+            <th class="px-4 py-3 font-medium">
               Codigo ubigeo
+            </th>
+            <th class="px-4 py-3 font-medium">
+              Agua
             </th>
             <th class="px-4 py-3 font-medium text-right">
               Acciones
@@ -75,7 +81,7 @@ const { can } = usePermissions()
         <tbody class="divide-y divide-default">
           <tr v-if="showInitialLoading">
             <td
-              colspan="6"
+              colspan="8"
               class="px-4 py-8 text-center text-muted"
             >
               Cargando centros...
@@ -84,7 +90,7 @@ const { can } = usePermissions()
 
           <tr v-else-if="!centros.length">
             <td
-              colspan="6"
+              colspan="8"
               class="px-4 py-8 text-center text-muted"
             >
               Todavia no hay centros registrados.
@@ -108,8 +114,29 @@ const { can } = usePermissions()
               <td class="px-4 py-3">
                 {{ centro.distrito }}
               </td>
+              <td class="px-4 py-3">
+                {{ centro.nombreCentroPoblado || '—' }}
+              </td>
               <td class="px-4 py-3 font-mono">
                 {{ centro.codigoUbigeo }}
+              </td>
+              <td class="px-4 py-3">
+                <UBadge
+                  v-if="centro.tieneSistemaAgua === true"
+                  label="Sí"
+                  color="success"
+                  variant="subtle"
+                />
+                <UBadge
+                  v-else-if="centro.tieneSistemaAgua === false"
+                  label="No"
+                  color="error"
+                  variant="subtle"
+                />
+                <span
+                  v-else
+                  class="text-muted"
+                >—</span>
               </td>
               <td class="px-4 py-3">
                 <div class="flex justify-end gap-2">

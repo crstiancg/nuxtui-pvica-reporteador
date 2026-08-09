@@ -44,6 +44,10 @@ const statCards = computed(() => {
     }
   ]
 })
+
+const maxDepartamentoTotal = computed(() =>
+  Math.max(1, ...(data.value?.topDepartamentos.map(item => item.totalCentros) || [1]))
+)
 </script>
 
 <template>
@@ -57,7 +61,7 @@ const statCards = computed(() => {
     </template>
     <template #body>
       <div class="space-y-6">
-        <section class="rounded-3xl border border-default bg-gradient-to-br from-primary/10 via-bg to-bg p-6 shadow-sm">
+        <section class="rounded-xl border-none border-default bg-gradient-to-br from-primary/10 via-bg to-bg p-6 shadow-md">
           <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div class="space-y-2">
               <p class="text-sm font-medium uppercase tracking-[0.2em] text-primary">
@@ -87,7 +91,7 @@ const statCards = computed(() => {
           <UCard
             v-for="card in statCards"
             :key="card.title"
-            class="border border-default"
+            class="border-none border-default"
           >
             <div class="flex items-start justify-between gap-4">
               <div class="space-y-1">
@@ -102,15 +106,42 @@ const statCards = computed(() => {
                 </p>
               </div>
 
-              <div class="rounded-2xl bg-primary/10 p-3 text-primary">
+              <div class="rounded-xl bg-primary/10 p-3 text-primary">
                 <UIcon :name="card.icon" class="size-5" />
               </div>
             </div>
           </UCard>
         </section>
 
+        <section>
+          <UCard class="border-none border-default">
+            <template #header>
+              <div>
+                <h2 class="text-lg font-semibold text-highlighted">
+                  Tendencia de reportes
+                </h2>
+                <p class="text-sm text-muted">
+                  Reportes creados por periodo (ultimos 12).
+                </p>
+              </div>
+            </template>
+
+            <ReportesTrendChart
+              v-if="data?.periodosTrend?.length"
+              :data="data.periodosTrend"
+            />
+            <UAlert
+              v-else
+              color="neutral"
+              variant="subtle"
+              title="Todavia no hay datos suficientes"
+              description="Cuando tengas periodos con reportes, aqui aparecerá la tendencia."
+            />
+          </UCard>
+        </section>
+
         <section class="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-          <UCard class="border border-default">
+          <UCard class="border-none border-default">
             <template #header>
               <div class="flex items-center justify-between gap-3">
                 <div>
@@ -160,7 +191,7 @@ const statCards = computed(() => {
             />
           </UCard>
 
-          <UCard class="border border-default">
+          <UCard class="border-none border-default">
             <template #header>
               <div>
                 <h2 class="text-lg font-semibold text-highlighted">
@@ -206,7 +237,7 @@ const statCards = computed(() => {
         </section>
 
         <section>
-          <UCard class="border border-default">
+          <UCard class="border-none border-default">
             <template #header>
               <div>
                 <h2 class="text-lg font-semibold text-highlighted">
@@ -218,22 +249,29 @@ const statCards = computed(() => {
               </div>
             </template>
 
-            <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+            <div class="space-y-3">
               <div
                 v-for="item in data?.topDepartamentos || []"
                 :key="item.departamento"
-                class="rounded-2xl border border-default bg-muted/30 p-4"
               >
-                <p class="text-sm text-muted">
-                  {{ item.departamento }}
-                </p>
-                <p class="mt-2 text-2xl font-semibold text-highlighted">
-                  {{ item.totalCentros }}
-                </p>
-                <p class="text-xs text-toned">
-                  centros registrados
-                </p>
+                <div class="flex items-center justify-between text-sm mb-1">
+                  <span class="font-medium text-highlighted">{{ item.departamento }}</span>
+                  <span class="text-muted">{{ item.totalCentros }} centros</span>
+                </div>
+                <div class="h-2 rounded-full bg-muted/40 overflow-hidden">
+                  <div
+                    class="h-full rounded-full bg-primary"
+                    :style="{ width: `${(item.totalCentros / maxDepartamentoTotal) * 100}%` }"
+                  />
+                </div>
               </div>
+
+              <p
+                v-if="!data?.topDepartamentos?.length"
+                class="text-sm text-muted"
+              >
+                Aun no hay centros para mostrar.
+              </p>
             </div>
           </UCard>
         </section>

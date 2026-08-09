@@ -2,6 +2,7 @@ import prisma from '~~/lib/prisma'
 
 export default eventHandler(async (event) => {
   await requireAuthenticatedSession(event)
+  await requirePermission(event, 'reportes.ver')
 
   const [
     totalCentros,
@@ -10,6 +11,7 @@ export default eventHandler(async (event) => {
     totalItems,
     latestPeriodo,
     periodosRecientes,
+    periodosTrend,
     departamentos
   ] = await prisma.$transaction([
     prisma.centro.count(),
@@ -42,6 +44,20 @@ export default eventHandler(async (event) => {
         { mes: 'desc' }
       ],
       take: 5
+    }),
+    prisma.periodo.findMany({
+      include: {
+        _count: {
+          select: {
+            reportes: true
+          }
+        }
+      },
+      orderBy: [
+        { anio: 'desc' },
+        { mes: 'desc' }
+      ],
+      take: 12
     }),
     prisma.centro.groupBy({
       by: ['departamento'],
@@ -87,6 +103,13 @@ export default eventHandler(async (event) => {
       label: `${periodo.anio}-${String(periodo.mes).padStart(2, '0')}`,
       totalReportes: periodo._count.reportes
     })),
+    periodosTrend: [...periodosTrend]
+      .reverse()
+      .map(periodo => ({
+        id: periodo.id,
+        label: `${periodo.anio}-${String(periodo.mes).padStart(2, '0')}`,
+        totalReportes: periodo._count.reportes
+      })),
     topDepartamentos: departamentos.map((item) => {
       const totalCentros = typeof item._count === 'object' && item._count && '_all' in item._count
         ? item._count._all ?? 0

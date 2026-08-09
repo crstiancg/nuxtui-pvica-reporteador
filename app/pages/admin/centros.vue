@@ -15,8 +15,10 @@ const page = ref(1)
 const perPage = ref(10)
 const isFormModalOpen = ref(false)
 const isDeleteModalOpen = ref(false)
+const isImportModalOpen = ref(false)
 const isSubmitting = ref(false)
 const isDeleting = ref(false)
+const isImporting = ref(false)
 const editingCentro = ref<Centro | null>(null)
 const deletingCentro = ref<Centro | null>(null)
 let searchDebounceTimer: ReturnType<typeof setTimeout> | undefined
@@ -62,6 +64,48 @@ const openEditModal = (centro: Centro) => {
 const openDeleteModal = (centro: Centro) => {
   deletingCentro.value = centro
   isDeleteModalOpen.value = true
+}
+
+const openImportModal = () => {
+  isImportModalOpen.value = true
+}
+
+const importExcel = async (payload: { file: File }) => {
+  isImporting.value = true
+
+  try {
+    const formData = new FormData()
+    formData.append('file', payload.file)
+
+    const response = await $fetch<{
+      data: {
+        filasProcesadas: number
+        centrosDetectados: number
+        centrosCreados: number
+        centrosActualizados: number
+      }
+    }>('/api/centros/import', {
+      method: 'POST',
+      body: formData
+    })
+
+    await refresh()
+    isImportModalOpen.value = false
+
+    toast.success(
+      'Importacion completada',
+      `${response.data.filasProcesadas} filas procesadas. Creados: ${response.data.centrosCreados}, actualizados: ${response.data.centrosActualizados}.`
+    )
+  } catch (error: unknown) {
+    toast.error(
+      'No se pudo importar el Excel',
+      typeof error === 'object' && error !== null && 'statusMessage' in error
+        ? String(error.statusMessage)
+        : 'Revisa el archivo e intenta nuevamente'
+    )
+  } finally {
+    isImporting.value = false
+  }
 }
 
 const saveCentro = async (payload: CentroSchemaType) => {
@@ -138,6 +182,14 @@ const deleteCentro = async () => {
         <template #right>
           <UButton
             v-if="can('centros.crear')"
+            color="neutral"
+            variant="soft"
+            icon="i-lucide-file-spreadsheet"
+            label="Importar Excel"
+            @click="openImportModal"
+          />
+          <UButton
+            v-if="can('centros.crear')"
             icon="i-lucide-plus"
             label="Nuevo centro"
             @click="openCreateModal"
@@ -188,6 +240,12 @@ const deleteCentro = async () => {
           :centro="deletingCentro"
           :loading="isDeleting"
           @confirm="deleteCentro"
+        />
+
+        <CentroImportModal
+          v-model:open="isImportModalOpen"
+          :loading="isImporting"
+          @submit="importExcel"
         />
       </div>
     </template>

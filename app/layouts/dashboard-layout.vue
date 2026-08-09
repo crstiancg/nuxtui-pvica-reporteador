@@ -39,6 +39,14 @@ const links = [
       }
     },
     {
+      label: 'Mapa',
+      to: '/admin/mapa',
+      icon: 'i-lucide-map',
+      onSelect: () => {
+        open.value = false
+      }
+    },
+    {
       label: 'Periodos',
       to: '/admin/periodos',
       icon: 'i-lucide-calendar-days',

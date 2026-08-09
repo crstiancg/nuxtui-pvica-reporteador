@@ -9,117 +9,6 @@ const defaultUser = {
   password: "password",
 };
 
-const centros = [
-  {
-    departamento: "MADRE DE DIOS",
-    provincia: "TAMBOPATA",
-    distrito: "LABERINTO - SANTO DOMINGO",
-    codigoUbigeo: "1701040034",
-  },
-  {
-    departamento: "MADRE DE DIOS",
-    provincia: "TAMBOPATA",
-    distrito: "TAMBOPATA -  CHONTA",
-    codigoUbigeo: "1701010032",
-  },
-  {
-    departamento: "MADRE DE DIOS",
-    provincia: "TAMBOPATA",
-    distrito: "LABERINTO - FLORIDA ALTA",
-    codigoUbigeo: "1701040022",
-  },
-  {
-    departamento: "MADRE DE DIOS",
-    provincia: "TAMBOPATA",
-    distrito: "LABERINTO -  AMARACAIRE",
-    codigoUbigeo: "1701040009",
-  },
-  {
-    departamento: "MADRE DE DIOS",
-    provincia: "TAMBOPATA",
-    distrito: "TAMBOPATA - IZUYAMA",
-    codigoUbigeo: "1701010040",
-  },
-  {
-    departamento: "MADRE DE DIOS",
-    provincia: "TAMBOPATA",
-    distrito: "TAMBOPATA - FITZCARRALD",
-    codigoUbigeo: "1701010024",
-  },
-  {
-    departamento: "MADRE DE DIOS",
-    provincia: "TAMBOPATA",
-    distrito: "LAS PIEDRAS - ALEGRIA",
-    codigoUbigeo: "1701030019",
-  },
-  {
-    departamento: "MADRE DE DIOS",
-    provincia: "MANU",
-    distrito: "HUEPETUHE - CHOQUE",
-    codigoUbigeo: "1702040004",
-  },
-  {
-    departamento: "MADRE DE DIOS",
-    provincia: "TAHUAMANU",
-    distrito: "IÑAPARI - BELGICA",
-    codigoUbigeo: "1703010002",
-  },
-  {
-    departamento: "MADRE DE DIOS",
-    provincia: "TAHUAMANU",
-    distrito: "IÑAPARI - VILLA PRIMAVERA",
-    codigoUbigeo: "1703010004",
-  },
-  {
-    departamento: "MADRE DE DIOS",
-    provincia: "MANU",
-    distrito: "HUEPETUHE - CAYCHIHUE BARRACA",
-    codigoUbigeo: "1702040007",
-  },
-  {
-    departamento: "MADRE DE DIOS",
-    provincia: "MANU",
-    distrito: "MADRE DE DIOS - DELTA 2",
-    codigoUbigeo: "1702030022",
-  },
-  {
-    departamento: "MADRE DE DIOS",
-    provincia: "TAHUAMANU",
-    distrito: "TAHUAMANU - LA NOVIA",
-    codigoUbigeo: "1703030007",
-  },
-  {
-    departamento: "MADRE DE DIOS",
-    provincia: "TAMBOPATA",
-    distrito: "TAMBOPATA - OTILIA",
-    codigoUbigeo: "1701010005",
-  },
-  {
-    departamento: "MADRE DE DIOS",
-    provincia: "TAHUAMANU",
-    distrito: "TAHUAMANU - SAN PEDRO",
-    codigoUbigeo: "1703030005",
-  },
-  {
-    departamento: "MADRE DE DIOS",
-    provincia: "TAMBOPATA",
-    distrito: "INAMBARI - PALMERA",
-    codigoUbigeo: "1701020017",
-  },
-  {
-    departamento: "MADRE DE DIOS",
-    provincia: "TAMBOPATA",
-    distrito: "INAMBARI - DOS DE MAYO",
-    codigoUbigeo: "1701020015",
-  },
-  {
-    departamento: "MADRE DE DIOS",
-    provincia: "TAMBOPATA",
-    distrito: "INAMBARI -  PUERTO MAZUKO",
-    codigoUbigeo: "1701020016",
-  },
-];
-
 const parametros = [
   { codigoCabecera: "decretoAluminio", valor: "Máximo" },
   { codigoCabecera: "decretoBacteriasColiformesFecales", valor: "Máximo" },
@@ -244,22 +133,9 @@ async function seedDefaultUser() {
   console.log(`Default user ready: ${defaultUser.email} (admin)`);
 }
 
-async function seedCentros() {
-  const chunkSize = 1_000;
-  let created = 0;
-
-  for (let index = 0; index < centros.length; index += chunkSize) {
-    const chunk = centros.slice(index, index + chunkSize);
-    const result = await prisma.centro.createMany({
-      data: chunk,
-      skipDuplicates: true,
-    });
-
-    created += result.count;
-  }
-
-  console.log(`Centros ready: ${centros.length} total, ${created} created`);
-}
+// Los centros poblados ya no se siembran con datos de ejemplo: se cargan
+// con datos reales desde Admin > Centros > Importar Excel
+// (ver public/pvica_reporte_centrospoblados.xlsx).
 
 async function seedParametros() {
   const validCodes = parametros.map(parametro => parametro.codigoCabecera);
@@ -301,7 +177,6 @@ async function seedParametros() {
 async function main() {
   await seedRoles();
   await seedDefaultUser();
-  await seedCentros();
   await seedParametros();
 }
 

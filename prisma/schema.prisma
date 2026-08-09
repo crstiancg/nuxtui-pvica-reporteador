@@ -82,14 +82,41 @@ model Post {
 }
 
 model Centro {
-  id           Int       @id @default(autoincrement())
-  departamento String    @db.VarChar(100)
-  provincia    String    @db.VarChar(100)
-  distrito     String    @db.VarChar(100)
-  codigoUbigeo String    @unique @map("codigo_ubigeo") @db.VarChar(10)
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
-  reportes     Reporte[]
+  id           Int    @id @default(autoincrement())
+  departamento String @db.VarChar(100)
+  provincia    String @db.VarChar(100)
+  distrito     String @db.VarChar(100)
+  codigoUbigeo String @unique @map("codigo_ubigeo") @db.VarChar(10)
+
+  // Ubicacion / referencia
+  nombreCentroPoblado  String? @map("nombre_centro_poblado") @db.VarChar(150)
+  codigoUbigeoDistrito String? @map("codigo_ubigeo_distrito") @db.VarChar(6)
+  ambito               String? @db.VarChar(20)
+  quintil              String? @db.VarChar(5)
+
+  // Salud
+  establecimientoSalud String? @map("establecimiento_salud") @db.VarChar(150)
+  codigoRenipress      String? @map("codigo_renipress") @db.VarChar(20)
+  validadoMinsa        Boolean? @map("validado_minsa")
+
+  // Servicio de agua / poblacion
+  tieneSistemaAgua  Boolean? @map("tiene_sistema_agua")
+  poblacionTotal    Int?     @map("poblacion_total")
+  poblacionServida  Int?     @map("poblacion_servida")
+  poblacionVigilada Int?     @map("poblacion_vigilada")
+
+  // Coordenadas
+  coordenadaEste  String? @map("coordenada_este") @db.VarChar(20)
+  coordenadaNorte String? @map("coordenada_norte") @db.VarChar(20)
+  huso            String? @db.VarChar(5)
+  banda           String? @db.VarChar(5)
+  latitud         Float?
+  longitud        Float?
+  altitud         Int?
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  reportes  Reporte[]
 
   @@map("centros")
 }

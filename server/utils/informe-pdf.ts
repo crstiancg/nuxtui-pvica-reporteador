@@ -18,7 +18,8 @@ type InformeReporte = {
   centroProvincia: string
   centroDepartamento: string
   centroUbigeo: string
-  periodoLabel: string
+  periodoMes: number
+  periodoAnio: number
   decreto: ReportePreviewEntry[]
   eca: ReportePreviewEntry[]
 }
@@ -46,52 +47,54 @@ const formatFechaHoy = (ciudad: string | null | undefined) => {
 }
 
 const resultRows = (entries: ReportePreviewEntry[]) =>
-  entries.filter(entry => entry.calculatedValue !== null)
+  entries.filter(entry => entry.calculatedValue !== null && entry.cumple !== null)
 
-const interpretacionLabel = (entry: ReportePreviewEntry) => {
-  if (entry.cumple === true) return 'Cumple'
-  if (entry.cumple === false) return 'No cumple'
-  return 'Sin límite normado'
+const interpretacionLabel = (entry: ReportePreviewEntry) =>
+  entry.cumple === false ? 'No cumple' : 'Cumple'
+
+const formatParamLabel = (entry: ReportePreviewEntry) => {
+  if (!entry.unidad || entry.unidad.toLowerCase() === 'ph') return entry.label
+  return `${entry.label} (${entry.unidad})`
 }
 
-const buildResultTable = (entries: ReportePreviewEntry[]) => {
+const tableLayout = {
+  fillColor: (rowIndex: number) => rowIndex === 0 ? '#f1f5f9' : null,
+  hLineWidth: () => 0.5,
+  vLineWidth: () => 0.5,
+  hLineColor: () => '#cbd5e1',
+  vLineColor: () => '#cbd5e1'
+}
+
+const buildParamTable = (entries: ReportePreviewEntry[], headerParamLabel: string, headerValueLabel: string) => {
   const rows = resultRows(entries)
 
   if (!rows.length) {
-    return { text: 'No se registraron valores para este grupo.', italics: true, color: '#666666', margin: [0, 4, 0, 12] }
+    return { text: 'No se registraron valores evaluables para este grupo.', italics: true, color: '#666666', fontSize: 9 }
   }
 
   return {
     table: {
       headerRows: 1,
-      widths: ['*', 'auto', 'auto', 'auto'],
+      widths: ['*', 'auto', 'auto'],
       body: [
         [
-          { text: 'Parámetro', style: 'tableHeader' },
-          { text: 'Valor', style: 'tableHeader' },
-          { text: 'Límite', style: 'tableHeader' },
-          { text: 'Interpretación', style: 'tableHeader' }
+          { text: headerParamLabel, style: 'tableHeader' },
+          { text: headerValueLabel, style: 'tableHeader' },
+          { text: 'Interpretacion', style: 'tableHeader' }
         ],
         ...rows.map(entry => [
-          entry.label,
-          `${entry.calculatedValue}${entry.unidad ? ` ${entry.unidad}` : ''}`,
-          entry.limiteLabel ?? '—',
+          { text: formatParamLabel(entry), fontSize: 9 },
+          { text: String(entry.calculatedValue), fontSize: 9 },
           {
             text: interpretacionLabel(entry),
-            color: entry.cumple === false ? '#b91c1c' : entry.cumple === true ? '#15803d' : '#666666',
-            bold: entry.cumple !== null
+            fontSize: 9,
+            color: entry.cumple === false ? '#b91c1c' : '#15803d',
+            bold: true
           }
         ])
       ]
     },
-    layout: {
-      fillColor: (rowIndex: number) => rowIndex === 0 ? '#f1f5f9' : null,
-      hLineWidth: () => 0.5,
-      vLineWidth: () => 0.5,
-      hLineColor: () => '#cbd5e1',
-      vLineColor: () => '#cbd5e1'
-    },
-    margin: [0, 4, 0, 12]
+    layout: tableLayout
   }
 }
 
@@ -100,43 +103,54 @@ const buildConclusiones = (decreto: ReportePreviewEntry[], eca: ReportePreviewEn
   const noCumple = all.filter(entry => entry.cumple === false)
 
   if (!all.length) {
-    return { lines: ['No se registraron valores suficientes para emitir una conclusión.'], hayIncumplimientos: false }
+    return {
+      conclusiones: ['No se registraron valores suficientes para emitir una conclusión.'],
+      recomendaciones: ['Se recomienda completar el registro de parámetros para el siguiente periodo.'],
+      hayIncumplimientos: false
+    }
   }
 
   if (!noCumple.length) {
     return {
-      lines: [
-        'Todos los parámetros evaluados en el periodo fueron admisibles.',
-        'La calidad de agua de la fuente, reservorio y/o red cumple con los parámetros evaluados.'
+      conclusiones: [
+        'Todos los parámetros evaluados en el periodo fueron admisibles en la fuente de suministro.',
+        'La calidad de agua de la Red y/o Reservorio cumple(n) con los parámetros evaluados.'
+      ],
+      recomendaciones: [
+        'La fuente el suministro puede ser siguiendo empleado con simple de desinfección, por que es pertinente acciones de limpieza y mantenimiento de la fuente a fin de preservar esta calidad.'
       ],
       hayIncumplimientos: false
     }
   }
 
   return {
-    lines: [
-      `Se identificaron ${noCumple.length} parámetro${noCumple.length === 1 ? '' : 's'} que no cumple${noCumple.length === 1 ? '' : 'n'} con el límite normado: ${noCumple.map(entry => entry.label).join(', ')}.`,
-      'Se recomienda investigar las causas y adoptar medidas correctivas de forma inmediata.'
+    conclusiones: [
+      `Se identificaron ${noCumple.length} parámetro${noCumple.length === 1 ? '' : 's'} que no cumple${noCumple.length === 1 ? '' : 'n'} con el límite normado: ${noCumple.map(entry => entry.label).join(', ')}.`
+    ],
+    recomendaciones: [
+      'Investigar de inmediato las causas de los parámetros que no cumplen y adoptar medidas correctivas.',
+      'Reforzar la desinfección y el mantenimiento de la fuente, reservorio y red de distribución.'
     ],
     hayIncumplimientos: true
   }
 }
 
 export const buildInformeDocDefinition = (reporte: InformeReporte, configuracion: ConfiguracionLike) => {
-  const { lines: conclusiones, hayIncumplimientos } = buildConclusiones(reporte.decreto, reporte.eca)
+  const { conclusiones, recomendaciones } = buildConclusiones(reporte.decreto, reporte.eca)
+  const monthName = (MONTHS[reporte.periodoMes - 1] ?? '').toUpperCase()
+  const entidadLines = (configuracion.entidadEmisora ?? '')
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean)
 
   return {
     pageMargins: [40, 40, 40, 60],
     content: [
-      configuracion.entidadEmisora
-        ? { text: configuracion.entidadEmisora, style: 'letterhead', margin: [0, 0, 0, 16] }
-        : null,
-
       { text: `INFORME N° ${reporte.id}-${new Date().getFullYear()}`, style: 'title', margin: [0, 0, 0, 12] },
 
       {
         columns: [
-          { width: 60, text: 'PARA', bold: true },
+          { width: 60, text: 'PARA :', bold: true },
           {
             width: '*',
             text: [
@@ -149,21 +163,27 @@ export const buildInformeDocDefinition = (reporte: InformeReporte, configuracion
       },
       {
         columns: [
-          { width: 60, text: 'ASUNTO', bold: true },
-          { width: '*', text: `Informe de monitoreo – ${reporte.centroNombre}` }
+          { width: 60, text: 'ASUNTO :', bold: true },
+          {
+            width: '*',
+            text: [
+              { text: 'Informe de monitoreo – ' },
+              { text: reporte.centroNombre, bold: true }
+            ]
+          }
         ],
         margin: [0, 0, 0, 4]
       },
       {
         columns: [
-          { width: 60, text: 'FECHA', bold: true },
+          { width: 60, text: 'FECHA :', bold: true },
           { width: '*', text: formatFechaHoy(configuracion.ciudad) }
         ],
         margin: [0, 0, 0, 16]
       },
 
       {
-        text: `Previo cordial saludo, mediante la presente se informa la calidad de agua en base a parámetros obligatorios de la fuente de suministro, reservorio y redes, de la localidad de ${reporte.centroNombre} (${reporte.centroDistrito}, ${reporte.centroProvincia}, ${reporte.centroDepartamento} — Ubigeo ${reporte.centroUbigeo}), correspondiente al periodo ${reporte.periodoLabel}; se emite la presente para las acciones correspondientes.`,
+        text: `Previo cordial saludo, mediante la presente le informo la calidad de agua en base a parámetros obligatorios de la fuente de suministro, reservorio y redes, de la localidad de ${reporte.centroNombre} registrado en el SIVICA en el mes de ${monthName} del ${reporte.periodoAnio}; se emite la presente para las acciones correspondientes.`,
         margin: [0, 0, 0, 16]
       },
 
@@ -174,27 +194,25 @@ export const buildInformeDocDefinition = (reporte: InformeReporte, configuracion
       },
 
       { text: 'II. Resultados', style: 'sectionTitle' },
-      { text: 'Captación (D.S. N° 004-2017-MINAM — ECA Categoría 1, Subcategoría A1)', style: 'subTitle' },
-      buildResultTable(reporte.eca),
-      { text: 'Reservorio y/o Red (D.S. N° 031-2010-SA)', style: 'subTitle' },
-      buildResultTable(reporte.decreto),
+      { text: monthName, alignment: 'center', bold: true, fontSize: 10, margin: [0, 4, 0, 4] },
+      {
+        columns: [
+          buildParamTable(reporte.eca, 'Parametros (DECRETO SUPREMO N° 004-2017-MINAM)', 'Captacion'),
+          buildParamTable(reporte.decreto, 'Parametros D.S. N° 031-2010-SA', 'Reservorio y/o Red')
+        ],
+        columnGap: 12
+      },
+      { text: 'Fuente: http://pvica.minsa.gob.pe/', fontSize: 8, italics: true, color: '#666666', margin: [0, 4, 0, 16] },
 
       { text: 'III. Conclusiones', style: 'sectionTitle' },
       {
-        ul: conclusiones,
+        stack: conclusiones.map(line => ({ text: `- ${line}`, margin: [0, 2, 0, 0] })),
         margin: [0, 4, 0, 16]
       },
 
       { text: 'IV. Recomendaciones', style: 'sectionTitle' },
       {
-        ul: hayIncumplimientos
-          ? [
-              'Investigar de inmediato las causas de los parámetros que no cumplen y adoptar medidas correctivas.',
-              'Reforzar la desinfección y mantenimiento de la fuente, reservorio y red de distribución.'
-            ]
-          : [
-              'La fuente de suministro puede seguir siendo empleada, manteniendo la desinfección, ya que es pertinente continuar con las acciones de limpieza y mantenimiento de la fuente a fin de preservar esta calidad.'
-            ],
+        stack: recomendaciones.map(line => ({ text: `- ${line}`, margin: [0, 2, 0, 0] })),
         margin: [0, 4, 0, 20]
       },
 
@@ -202,8 +220,11 @@ export const buildInformeDocDefinition = (reporte: InformeReporte, configuracion
         columns: [
           { width: '*', text: '' },
           {
-            width: 220,
+            width: 240,
             stack: [
+              entidadLines.length
+                ? { stack: entidadLines.map(line => ({ text: line, alignment: 'center', bold: true, fontSize: 8 })), margin: [0, 0, 0, 20] }
+                : null,
               { text: '_______________________________', alignment: 'center' },
               { text: configuracion.firmanteNombre || '(firmante no configurado)', alignment: 'center', bold: true, margin: [0, 4, 0, 0] },
               configuracion.firmanteColegiatura ? { text: configuracion.firmanteColegiatura, alignment: 'center', fontSize: 9 } : null,
@@ -212,12 +233,10 @@ export const buildInformeDocDefinition = (reporte: InformeReporte, configuracion
           }
         ]
       }
-    ].filter(Boolean),
+    ],
     styles: {
-      letterhead: { fontSize: 11, bold: true, alignment: 'center' },
       title: { fontSize: 13, bold: true },
       sectionTitle: { fontSize: 12, bold: true, margin: [0, 8, 0, 0] },
-      subTitle: { fontSize: 10, bold: true, italics: true, margin: [0, 8, 0, 0] },
       tableHeader: { bold: true, fontSize: 9 }
     },
     defaultStyle: {

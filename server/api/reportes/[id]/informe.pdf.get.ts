@@ -61,7 +61,8 @@ export default eventHandler(async (event) => {
       centroProvincia: reporte.centro.provincia,
       centroDepartamento: reporte.centro.departamento,
       centroUbigeo: reporte.centro.codigoUbigeo,
-      periodoLabel,
+      periodoMes: reporte.periodo.mes,
+      periodoAnio: reporte.periodo.anio,
       decreto: preview.decreto,
       eca: preview.eca
     },

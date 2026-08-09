@@ -1,5 +1,8 @@
+import { writeFileSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
+import { tmpdir } from 'node:os'
 import type { ReportePreviewEntry } from '#shared/types/reporte'
+import { informeFontsBase64 } from './informe-fonts-data'
 
 type ConfiguracionLike = {
   entidadEmisora?: string | null
@@ -29,14 +32,35 @@ const MONTHS = [
   'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
 ]
 
-const fontsPath = join(process.cwd(), 'server/assets/fonts/Roboto')
+let cachedFontsPath: string | null = null
 
-export const informeFonts = {
-  Roboto: {
-    normal: join(fontsPath, 'Roboto-Regular.ttf'),
-    bold: join(fontsPath, 'Roboto-Medium.ttf'),
-    italics: join(fontsPath, 'Roboto-Italic.ttf'),
-    bolditalics: join(fontsPath, 'Roboto-MediumItalic.ttf')
+// Las fuentes viajan embebidas en base64 dentro del bundle (informe-fonts-data.ts)
+// porque pdfmake solo acepta rutas de archivo reales, y process.cwd() no es confiable
+// una vez compilado (varia segun el hosting/preset de Nitro).
+const ensureFontsOnDisk = () => {
+  if (cachedFontsPath) return cachedFontsPath
+
+  const dir = join(tmpdir(), 'armind7-informe-fonts')
+  mkdirSync(dir, { recursive: true })
+
+  for (const [filename, base64] of Object.entries(informeFontsBase64)) {
+    writeFileSync(join(dir, filename), Buffer.from(base64, 'base64'))
+  }
+
+  cachedFontsPath = dir
+  return dir
+}
+
+export const getInformeFonts = () => {
+  const fontsPath = ensureFontsOnDisk()
+
+  return {
+    Roboto: {
+      normal: join(fontsPath, 'Roboto-Regular.ttf'),
+      bold: join(fontsPath, 'Roboto-Medium.ttf'),
+      italics: join(fontsPath, 'Roboto-Italic.ttf'),
+      bolditalics: join(fontsPath, 'Roboto-MediumItalic.ttf')
+    }
   }
 }
 

@@ -23,14 +23,10 @@ export default defineNuxtConfig({
     }
   },
 
-  ignore: ['**/app/generated/prisma/**'],
-
-  routeRules: {
-    '/': { prerender: true }
-  },
+  routeRules: {},
 
   nitro: {
-    preset: 'netlify',
+    preset: 'node-server',
     externals: {
       inline: ['xlsx']
     }

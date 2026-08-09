@@ -1,6 +1,6 @@
 import pdfMake from 'pdfmake'
 import prisma from '~~/lib/prisma'
-import { buildInformeDocDefinition, informeFonts } from '~~/server/utils/informe-pdf'
+import { buildInformeDocDefinition, getInformeFonts } from '~~/server/utils/informe-pdf'
 import { buildReportePreview } from '~~/server/utils/reporte-preview'
 
 export default eventHandler(async (event) => {
@@ -69,7 +69,7 @@ export default eventHandler(async (event) => {
     configuracion
   )
 
-  pdfMake.setFonts(informeFonts)
+  pdfMake.setFonts(getInformeFonts())
   pdfMake.setLocalAccessPolicy(() => true)
 
   const pdfDoc = pdfMake.createPdf(docDefinition as never)

@@ -16,8 +16,8 @@ const isOpen = computed({
 })
 
 const tabItems = [
-  { label: 'Decreto', slot: 'decreto', icon: 'i-lucide-flask-conical' },
-  { label: 'Eca', slot: 'eca', icon: 'i-lucide-test-tube-diagonal' }
+  { label: 'Reservorio y/o Red', slot: 'decreto', icon: 'i-lucide-flask-conical' },
+  { label: 'Captación', slot: 'eca', icon: 'i-lucide-test-tube-diagonal' }
 ]
 
 const centroLabel = computed(() => {
@@ -43,16 +43,41 @@ const periodoLabel = computed(() => {
 const decretoPreview = computed(() => props.reporte?.preview?.decreto ?? [])
 const ecaPreview = computed(() => props.reporte?.preview?.eca ?? [])
 
-const summaryCount = (entries: ReportePreviewEntry[]) =>
-  entries.filter(entry => entry.calculatedValue !== null).length
+const noCumpleCount = (entries: ReportePreviewEntry[]) =>
+  entries.filter(entry => entry.cumple === false).length
 
-const badgeColor = (entry: ReportePreviewEntry) =>
-  entry.calculatedValue === null ? 'neutral' : 'primary'
+const summaryBadge = (entries: ReportePreviewEntry[]) => {
+  const noCumple = noCumpleCount(entries)
 
-const cardClass = (entry: ReportePreviewEntry) =>
-  entry.calculatedValue === null
-    ? 'rounded-xl border border-default/60 bg-muted/20 p-4'
-    : 'rounded-xl border border-primary/20 bg-primary/5 p-4'
+  if (noCumple > 0) {
+    return { color: 'error' as const, label: `${noCumple} no cumple${noCumple === 1 ? '' : 'n'}` }
+  }
+
+  const evaluated = entries.filter(entry => entry.cumple !== null).length
+  return { color: 'success' as const, label: `${evaluated} evaluados, todos cumplen` }
+}
+
+const complianceBadge = (entry: ReportePreviewEntry) => {
+  if (entry.cumple === true) return { color: 'success' as const, label: 'Cumple' }
+  if (entry.cumple === false) return { color: 'error' as const, label: 'No cumple' }
+  return { color: 'neutral' as const, label: 'Sin límite' }
+}
+
+const cardClass = (entry: ReportePreviewEntry) => {
+  if (entry.calculatedValue === null) {
+    return 'rounded-xl border border-default/60 bg-muted/20 p-4'
+  }
+
+  if (entry.cumple === false) {
+    return 'rounded-xl border border-error/40 bg-error/5 p-4'
+  }
+
+  if (entry.cumple === true) {
+    return 'rounded-xl border border-success/30 bg-success/5 p-4'
+  }
+
+  return 'rounded-xl border border-primary/20 bg-primary/5 p-4'
+}
 </script>
 
 <template>
@@ -106,18 +131,18 @@ const cardClass = (entry: ReportePreviewEntry) =>
                 <div class="flex items-center justify-between gap-3">
                   <div>
                     <h3 class="font-medium">
-                      Parametros Decreto
+                      Reservorio y/o Red
                     </h3>
                     <p class="text-sm text-muted">
-                      Valores agregados segun la regla configurada en parametros.
+                      D.S. N° 031-2010-SA — Reglamento de la Calidad del Agua para Consumo Humano.
                     </p>
                   </div>
 
                   <UBadge
-                    color="primary"
+                    :color="summaryBadge(decretoPreview).color"
                     variant="subtle"
                   >
-                    {{ summaryCount(decretoPreview) }}/{{ decretoPreview.length }} con valor
+                    {{ summaryBadge(decretoPreview).label }}
                   </UBadge>
                 </div>
               </template>
@@ -133,16 +158,27 @@ const cardClass = (entry: ReportePreviewEntry) =>
                       {{ entry.label }}
                     </div>
                     <UBadge
-                      :color="badgeColor(entry)"
+                      :color="complianceBadge(entry).color"
                       variant="subtle"
                       size="sm"
                     >
-                      {{ entry.rule }}
+                      {{ complianceBadge(entry).label }}
                     </UBadge>
                   </div>
 
                   <div class="mt-2 text-lg font-semibold text-highlighted">
                     {{ entry.calculatedValue ?? 'Sin dato' }}
+                    <span
+                      v-if="entry.calculatedValue !== null && entry.unidad"
+                      class="text-sm font-normal text-muted"
+                    >{{ entry.unidad }}</span>
+                  </div>
+
+                  <div
+                    v-if="entry.limiteLabel"
+                    class="mt-1 text-xs text-muted"
+                  >
+                    Límite: {{ entry.limiteLabel }}
                   </div>
 
                   <div class="mt-1 text-xs text-toned">
@@ -159,18 +195,18 @@ const cardClass = (entry: ReportePreviewEntry) =>
                 <div class="flex items-center justify-between gap-3">
                   <div>
                     <h3 class="font-medium">
-                      Parametros Eca
+                      Captación
                     </h3>
                     <p class="text-sm text-muted">
-                      Valores agregados segun la regla configurada en parametros.
+                      D.S. N° 004-2017-MINAM — ECA Categoría 1, Subcategoría A1.
                     </p>
                   </div>
 
                   <UBadge
-                    color="primary"
+                    :color="summaryBadge(ecaPreview).color"
                     variant="subtle"
                   >
-                    {{ summaryCount(ecaPreview) }}/{{ ecaPreview.length }} con valor
+                    {{ summaryBadge(ecaPreview).label }}
                   </UBadge>
                 </div>
               </template>
@@ -186,16 +222,27 @@ const cardClass = (entry: ReportePreviewEntry) =>
                       {{ entry.label }}
                     </div>
                     <UBadge
-                      :color="badgeColor(entry)"
+                      :color="complianceBadge(entry).color"
                       variant="subtle"
                       size="sm"
                     >
-                      {{ entry.rule }}
+                      {{ complianceBadge(entry).label }}
                     </UBadge>
                   </div>
 
                   <div class="mt-2 text-lg font-semibold text-highlighted">
                     {{ entry.calculatedValue ?? 'Sin dato' }}
+                    <span
+                      v-if="entry.calculatedValue !== null && entry.unidad"
+                      class="text-sm font-normal text-muted"
+                    >{{ entry.unidad }}</span>
+                  </div>
+
+                  <div
+                    v-if="entry.limiteLabel"
+                    class="mt-1 text-xs text-muted"
+                  >
+                    Límite: {{ entry.limiteLabel }}
                   </div>
 
                   <div class="mt-1 text-xs text-toned">
@@ -207,12 +254,18 @@ const cardClass = (entry: ReportePreviewEntry) =>
           </template>
         </UTabs>
 
-        <div class="flex justify-end">
+        <div class="flex justify-end gap-2">
           <UButton
             color="neutral"
             variant="ghost"
             label="Cerrar"
             @click="isOpen = false"
+          />
+          <UButton
+            icon="i-lucide-file-down"
+            label="Descargar informe"
+            :to="`/api/reportes/${reporte.id}/informe.pdf`"
+            target="_blank"
           />
         </div>
       </div>

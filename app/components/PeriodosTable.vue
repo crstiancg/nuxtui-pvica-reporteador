@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import type { Periodo } from '#shared/types/periodo'
+import type { PeriodoWithStats } from '#shared/types/periodo'
 
 const props = defineProps<{
   page: number
   pending?: boolean
-  periodos: Periodo[]
+  periodos: PeriodoWithStats[]
   perPage: number
   total: number
 }>()
 
 const emit = defineEmits<{
-  'delete': [periodo: Periodo]
-  'edit': [periodo: Periodo]
+  'delete': [periodo: PeriodoWithStats]
+  'edit': [periodo: PeriodoWithStats]
   'update:page': [value: number]
   'update:perPage': [value: number]
 }>()
@@ -23,6 +23,18 @@ const showInitialLoading = computed(() => props.pending && !props.periodos.lengt
 const showUpdating = computed(() => props.pending && props.periodos.length > 0)
 
 const { can } = usePermissions()
+
+const monthNames = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+]
+const monthLabel = (mes: number) => monthNames[mes - 1] ?? mes
+
+const coverageColor = (porcentaje: number) => {
+  if (porcentaje >= 50) return 'success'
+  if (porcentaje > 0) return 'warning'
+  return 'neutral'
+}
 </script>
 
 <template>
@@ -39,9 +51,9 @@ const { can } = usePermissions()
       <table class="min-w-full divide-y divide-default">
         <thead>
           <tr class="text-left text-sm text-muted">
-            <th class="px-4 py-3 font-medium">ID</th>
-            <th class="px-4 py-3 font-medium">Año</th>
-            <th class="px-4 py-3 font-medium">Mes</th>
+            <th class="px-4 py-3 font-medium">Periodo</th>
+            <th class="px-4 py-3 font-medium">Reportes</th>
+            <th class="px-4 py-3 font-medium">Cobertura</th>
             <th class="px-4 py-3 font-medium text-right">Acciones</th>
           </tr>
         </thead>
@@ -54,9 +66,22 @@ const { can } = usePermissions()
           </tr>
           <template v-else>
             <tr v-for="periodo in periodos" :key="periodo.id">
-              <td class="px-4 py-3">{{ periodo.id }}</td>
-              <td class="px-4 py-3">{{ periodo.anio }}</td>
-              <td class="px-4 py-3">{{ periodo.mes }}</td>
+              <td class="px-4 py-3">
+                <span class="font-medium text-highlighted">{{ monthLabel(periodo.mes) }} {{ periodo.anio }}</span>
+              </td>
+              <td class="px-4 py-3">
+                {{ periodo.totalReportes }}
+              </td>
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-2">
+                  <UBadge
+                    :color="coverageColor(periodo.coberturaPorcentaje)"
+                    variant="subtle"
+                    :label="`${periodo.coberturaPorcentaje}%`"
+                  />
+                  <span class="text-xs text-muted">{{ periodo.totalReportes }}/{{ periodo.totalCentros }} centros</span>
+                </div>
+              </td>
               <td class="px-4 py-3">
                 <div class="flex justify-end gap-2">
                   <UButton icon="i-lucide-file-text" color="neutral" variant="ghost" aria-label="Ver reportes del periodo" :to="`/admin/periodo-reportes/${periodo.id}`" />

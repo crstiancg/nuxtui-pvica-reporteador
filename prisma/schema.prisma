@@ -213,11 +213,41 @@ model ReporteItem {
 }
 
 model Parametro {
-  id             Int      @id @default(autoincrement())
-  codigoCabecera String   @map("codigo_cabecera") @db.VarChar(100)
-  valor          String   @db.VarChar(191)
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  id             Int    @id @default(autoincrement())
+  codigoCabecera String @map("codigo_cabecera") @db.VarChar(100)
+  valor          String @db.VarChar(191)
+
+  // Limite normativo (opcional). Cuando ambos son null, el parametro no
+  // tiene un limite maximo permisible numerico normado y no se evalua
+  // cumplimiento para el.
+  limiteMin Float?  @map("limite_min")
+  limiteMax Float?  @map("limite_max")
+  unidad    String? @db.VarChar(30)
+  norma     String? @db.VarChar(100)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("parametros")
+}
+
+// Configuracion singleton (siempre id=1) usada para el membrete, destinatario
+// y firma de los informes de monitoreo generados en PDF.
+model ConfiguracionInforme {
+  id Int @id @default(1)
+
+  entidadEmisora String? @map("entidad_emisora") @db.VarChar(200)
+  ciudad         String? @db.VarChar(100)
+
+  destinatarioNombre String? @map("destinatario_nombre") @db.VarChar(150)
+  destinatarioCargo  String? @map("destinatario_cargo") @db.VarChar(150)
+
+  firmanteNombre      String? @map("firmante_nombre") @db.VarChar(150)
+  firmanteCargo       String? @map("firmante_cargo") @db.VarChar(150)
+  firmanteColegiatura String? @map("firmante_colegiatura") @db.VarChar(50)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("configuracion_informe")
 }

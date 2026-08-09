@@ -11,6 +11,10 @@ export type ReportePreviewEntry = {
   itemCount: number
   label: string
   rule: string
+  cumple: boolean | null
+  limiteLabel: string | null
+  unidad: string | null
+  norma: string | null
 }
 
 export type ReportePreview = {

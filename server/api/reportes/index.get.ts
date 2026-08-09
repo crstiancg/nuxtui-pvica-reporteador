@@ -8,6 +8,7 @@ export default eventHandler(async (event) => {
   const query = getQuery(event)
   const search = typeof query.search === 'string' ? query.search.trim() : ''
   const periodoId = parsePositiveInteger(query.periodoId, 0)
+  const centroId = parsePositiveInteger(query.centroId, 0)
   const page = parsePositiveInteger(query.page, 1)
   const perPage = Math.min(parsePositiveInteger(query.perPage, 10), 100)
   const skip = (page - 1) * perPage
@@ -17,6 +18,10 @@ export default eventHandler(async (event) => {
 
   if (periodoId) {
     filters.push({ periodoId })
+  }
+
+  if (centroId) {
+    filters.push({ centroId })
   }
 
   if (search) {
@@ -71,7 +76,11 @@ export default eventHandler(async (event) => {
     prisma.parametro.findMany({
       select: {
         codigoCabecera: true,
-        valor: true
+        valor: true,
+        limiteMin: true,
+        limiteMax: true,
+        unidad: true,
+        norma: true
       }
     })
   ])

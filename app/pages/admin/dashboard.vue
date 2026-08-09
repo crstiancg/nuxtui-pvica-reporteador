@@ -146,10 +146,10 @@ const maxDepartamentoTotal = computed(() =>
               <div class="flex items-center justify-between gap-3">
                 <div>
                   <h2 class="text-lg font-semibold text-highlighted">
-                    Periodo mas reciente
+                    Periodo con más actividad
                   </h2>
                   <p class="text-sm text-muted">
-                    Estado del ultimo periodo creado en el sistema.
+                    Cobertura de vigilancia sobre el total de centros.
                   </p>
                 </div>
                 <UBadge
@@ -162,23 +162,46 @@ const maxDepartamentoTotal = computed(() =>
               </div>
             </template>
 
-            <div v-if="data?.latestPeriodo" class="grid gap-4 md:grid-cols-2">
-              <div class="rounded-2xl bg-muted/40 p-4">
-                <p class="text-sm text-muted">
-                  Reportes del periodo
-                </p>
-                <p class="mt-2 text-2xl font-semibold text-highlighted">
-                  {{ data.latestPeriodo.totalReportes }}
-                </p>
+            <div v-if="data?.latestPeriodo" class="space-y-4">
+              <div class="grid gap-4 sm:grid-cols-3">
+                <div class="rounded-2xl bg-muted/40 p-4">
+                  <p class="text-sm text-muted">
+                    Reportes
+                  </p>
+                  <p class="mt-2 text-2xl font-semibold text-highlighted">
+                    {{ data.latestPeriodo.totalReportes }}
+                  </p>
+                </div>
+
+                <div class="rounded-2xl bg-muted/40 p-4">
+                  <p class="text-sm text-muted">
+                    Items
+                  </p>
+                  <p class="mt-2 text-2xl font-semibold text-highlighted">
+                    {{ data.latestPeriodo.totalItems }}
+                  </p>
+                </div>
+
+                <div class="rounded-2xl bg-muted/40 p-4">
+                  <p class="text-sm text-muted">
+                    Cobertura
+                  </p>
+                  <p class="mt-2 text-2xl font-semibold text-highlighted">
+                    {{ data.latestPeriodo.coberturaPorcentaje }}%
+                  </p>
+                </div>
               </div>
 
-              <div class="rounded-2xl bg-muted/40 p-4">
-                <p class="text-sm text-muted">
-                  Items del periodo
-                </p>
-                <p class="mt-2 text-2xl font-semibold text-highlighted">
-                  {{ data.latestPeriodo.totalItems }}
-                </p>
+              <div>
+                <div class="flex items-center justify-between text-xs text-muted mb-1">
+                  <span>{{ data.latestPeriodo.centrosReportados }} de {{ data.latestPeriodo.totalCentros }} centros reportados</span>
+                </div>
+                <div class="h-2 rounded-full bg-muted/40 overflow-hidden">
+                  <div
+                    class="h-full rounded-full bg-primary"
+                    :style="{ width: `${data.latestPeriodo.coberturaPorcentaje}%` }"
+                  />
+                </div>
               </div>
             </div>
 
@@ -236,7 +259,45 @@ const maxDepartamentoTotal = computed(() =>
           </UCard>
         </section>
 
-        <section>
+        <section class="grid gap-4 xl:grid-cols-2">
+          <UCard class="border-none border-default">
+            <template #header>
+              <div>
+                <h2 class="text-lg font-semibold text-highlighted">
+                  Cobertura por provincia
+                </h2>
+                <p class="text-sm text-muted">
+                  % de centros con reporte en el periodo {{ data?.latestPeriodo?.label || 'actual' }}.
+                </p>
+              </div>
+            </template>
+
+            <div class="space-y-3">
+              <div
+                v-for="item in data?.latestPeriodo?.coberturaPorProvincia || []"
+                :key="item.provincia"
+              >
+                <div class="flex items-center justify-between text-sm mb-1">
+                  <span class="font-medium text-highlighted">{{ item.provincia }}</span>
+                  <span class="text-muted">{{ item.centrosReportados }}/{{ item.totalCentros }} ({{ item.porcentaje }}%)</span>
+                </div>
+                <div class="h-2 rounded-full bg-muted/40 overflow-hidden">
+                  <div
+                    class="h-full rounded-full bg-primary"
+                    :style="{ width: `${item.porcentaje}%` }"
+                  />
+                </div>
+              </div>
+
+              <p
+                v-if="!data?.latestPeriodo?.coberturaPorProvincia?.length"
+                class="text-sm text-muted"
+              >
+                Aun no hay datos de cobertura para mostrar.
+              </p>
+            </div>
+          </UCard>
+
           <UCard class="border-none border-default">
             <template #header>
               <div>

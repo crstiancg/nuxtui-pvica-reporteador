@@ -157,6 +157,24 @@ onBeforeUnmount(() => {
     reset-search-term-on-select
     value-key="value"
   >
+    <template #trailing="{ ui }">
+      <UButton
+        v-if="selectedValue !== undefined"
+        icon="i-lucide-x"
+        color="neutral"
+        variant="link"
+        size="xs"
+        :padded="false"
+        class="me-1"
+        aria-label="Quitar seleccion"
+        @click.stop.prevent="selectedValue = undefined"
+      />
+      <UIcon
+        name="i-lucide-chevron-down"
+        :class="ui.trailingIcon()"
+      />
+    </template>
+
     <template #empty>
       <div class="px-2 py-1.5 text-sm text-muted">
         No hay resultados

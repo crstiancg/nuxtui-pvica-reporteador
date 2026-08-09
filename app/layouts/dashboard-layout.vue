@@ -71,6 +71,14 @@ const links = [
       }
     },
     {
+      label: 'Configuracion',
+      to: '/admin/configuracion',
+      icon: 'i-lucide-settings',
+      onSelect: () => {
+        open.value = false
+      }
+    },
+    {
       label: 'Perfil',
       to: '/admin/profile',
       icon: 'i-lucide-user',

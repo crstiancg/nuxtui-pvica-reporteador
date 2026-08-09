@@ -23,6 +23,24 @@ const showInitialLoading = computed(() => props.pending && !props.parametros.len
 const showUpdating = computed(() => props.pending && props.parametros.length > 0)
 
 const { can } = usePermissions()
+
+const limiteLabel = (parametro: Parametro) => {
+  const unit = parametro.unidad ? ` ${parametro.unidad}` : ''
+
+  if (parametro.limiteMin != null && parametro.limiteMax != null) {
+    return `${parametro.limiteMin} – ${parametro.limiteMax}${unit}`
+  }
+
+  if (parametro.limiteMax != null) {
+    return `≤ ${parametro.limiteMax}${unit}`
+  }
+
+  if (parametro.limiteMin != null) {
+    return `≥ ${parametro.limiteMin}${unit}`
+  }
+
+  return '—'
+}
 </script>
 
 <template>
@@ -37,22 +55,26 @@ const { can } = usePermissions()
           <tr class="text-left text-sm text-muted">
             <th class="px-4 py-3 font-medium">ID</th>
             <th class="px-4 py-3 font-medium">Codigo cabecera</th>
-            <th class="px-4 py-3 font-medium">Valor</th>
+            <th class="px-4 py-3 font-medium">Regla</th>
+            <th class="px-4 py-3 font-medium">Límite</th>
+            <th class="px-4 py-3 font-medium">Norma</th>
             <th class="px-4 py-3 font-medium text-right">Acciones</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-default">
           <tr v-if="showInitialLoading">
-            <td colspan="4" class="px-4 py-8 text-center text-muted">Cargando parametros...</td>
+            <td colspan="6" class="px-4 py-8 text-center text-muted">Cargando parametros...</td>
           </tr>
           <tr v-else-if="!parametros.length">
-            <td colspan="4" class="px-4 py-8 text-center text-muted">Todavia no hay parametros registrados.</td>
+            <td colspan="6" class="px-4 py-8 text-center text-muted">Todavia no hay parametros registrados.</td>
           </tr>
           <template v-else>
             <tr v-for="parametro in parametros" :key="parametro.id">
               <td class="px-4 py-3">{{ parametro.id }}</td>
               <td class="px-4 py-3 font-mono">{{ parametro.codigoCabecera }}</td>
               <td class="px-4 py-3">{{ parametro.valor }}</td>
+              <td class="px-4 py-3 font-mono">{{ limiteLabel(parametro) }}</td>
+              <td class="px-4 py-3 text-muted text-xs">{{ parametro.norma || '—' }}</td>
               <td class="px-4 py-3">
                 <div class="flex justify-end gap-2">
                   <UButton v-if="can('parametros.editar')" icon="i-lucide-pencil" color="neutral" variant="ghost" aria-label="Editar parametro" @click="emit('edit', parametro)" />

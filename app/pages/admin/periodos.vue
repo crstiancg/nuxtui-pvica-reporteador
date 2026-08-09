@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Periodo, PeriodosResponse } from '#shared/types/periodo'
+import type { PeriodosResponse, PeriodoWithStats } from '#shared/types/periodo'
 import type { PeriodoSchemaType } from '#shared/zod/periodo.schema'
 
 definePageMeta({ middleware: 'authenticated', layout: 'dashboard-layout' })
@@ -14,8 +14,8 @@ const isFormModalOpen = ref(false)
 const isDeleteModalOpen = ref(false)
 const isSubmitting = ref(false)
 const isDeleting = ref(false)
-const editingPeriodo = ref<Periodo | null>(null)
-const deletingPeriodo = ref<Periodo | null>(null)
+const editingPeriodo = ref<PeriodoWithStats | null>(null)
+const deletingPeriodo = ref<PeriodoWithStats | null>(null)
 let searchDebounceTimer: ReturnType<typeof setTimeout> | undefined
 
 const { data, pending, refresh } = await useFetch<PeriodosResponse>('/api/periodos', {
@@ -41,12 +41,12 @@ const openCreateModal = () => {
   isFormModalOpen.value = true
 }
 
-const openEditModal = (periodo: Periodo) => {
+const openEditModal = (periodo: PeriodoWithStats) => {
   editingPeriodo.value = periodo
   isFormModalOpen.value = true
 }
 
-const openDeleteModal = (periodo: Periodo) => {
+const openDeleteModal = (periodo: PeriodoWithStats) => {
   deletingPeriodo.value = periodo
   isDeleteModalOpen.value = true
 }

@@ -7,7 +7,13 @@ export type Periodo = PeriodoSchemaType & {
   updatedAt: string
 }
 
+export type PeriodoWithStats = Periodo & {
+  totalReportes: number
+  totalCentros: number
+  coberturaPorcentaje: number
+}
+
 export type PeriodosResponse = {
-  data: Periodo[]
+  data: PeriodoWithStats[]
   meta: PaginationMeta
 }

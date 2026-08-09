@@ -22,18 +22,35 @@ export default eventHandler(async (event) => {
       : { id: -1 }
     : undefined
 
-  const [total, periodos] = await prisma.$transaction([
+  const [total, periodos, totalCentros] = await prisma.$transaction([
     prisma.periodo.count({ where }),
     prisma.periodo.findMany({
       where,
       skip,
       take: perPage,
-      orderBy: [{ anio: 'desc' }, { mes: 'desc' }]
-    })
+      orderBy: [{ anio: 'desc' }, { mes: 'desc' }],
+      include: {
+        _count: {
+          select: { reportes: true }
+        }
+      }
+    }),
+    prisma.centro.count()
   ])
 
   return {
-    data: periodos,
+    data: periodos.map(periodo => ({
+      id: periodo.id,
+      anio: periodo.anio,
+      mes: periodo.mes,
+      createdAt: periodo.createdAt,
+      updatedAt: periodo.updatedAt,
+      totalReportes: periodo._count.reportes,
+      totalCentros,
+      coberturaPorcentaje: totalCentros > 0
+        ? Math.round((periodo._count.reportes / totalCentros) * 1000) / 10
+        : 0
+    })),
     meta: {
       page,
       perPage,

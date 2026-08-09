@@ -5,6 +5,10 @@ type PreviewGroup = 'decreto' | 'eca'
 type ParametroLike = {
   codigoCabecera: string
   valor: string
+  limiteMin?: number | null
+  limiteMax?: number | null
+  unidad?: string | null
+  norma?: string | null
 }
 
 type PreviewItemSource = Record<string, unknown>
@@ -311,26 +315,80 @@ const calculateValue = (rule: string, values: unknown[]) => {
   return firstValue === undefined ? null : String(firstValue)
 }
 
+const evaluateCompliance = (
+  calculatedValue: string | null,
+  limiteMin: number | null,
+  limiteMax: number | null
+): boolean | null => {
+  if (calculatedValue === null || (limiteMin === null && limiteMax === null)) {
+    return null
+  }
+
+  const numericValue = parseNumber(calculatedValue)
+
+  if (numericValue === null) {
+    return null
+  }
+
+  if (limiteMin !== null && numericValue < limiteMin) {
+    return false
+  }
+
+  if (limiteMax !== null && numericValue > limiteMax) {
+    return false
+  }
+
+  return true
+}
+
+const formatLimit = (limiteMin: number | null, limiteMax: number | null, unidad: string | null): string | null => {
+  const unitSuffix = unidad ? ` ${unidad}` : ''
+
+  if (limiteMin !== null && limiteMax !== null) {
+    return `${formatNumber(limiteMin)} – ${formatNumber(limiteMax)}${unitSuffix}`
+  }
+
+  if (limiteMax !== null) {
+    return `≤ ${formatNumber(limiteMax)}${unitSuffix}`
+  }
+
+  if (limiteMin !== null) {
+    return `≥ ${formatNumber(limiteMin)}${unitSuffix}`
+  }
+
+  return null
+}
+
 export const buildReportePreview = (
   items: PreviewItemSource[],
   parametros: ParametroLike[]
 ): ReportePreview => {
-  const parametroMap = new Map(parametros.map(parametro => [parametro.codigoCabecera, parametro.valor]))
+  const parametroMap = new Map(parametros.map(parametro => [parametro.codigoCabecera, parametro]))
 
   const entries = previewDescriptors.map((descriptor) => {
-    const rule = parametroMap.get(descriptor.field) || 'Sin regla'
+    const parametro = parametroMap.get(descriptor.field)
+    const rule = parametro?.valor || 'Sin regla'
+    const limiteMin = parametro?.limiteMin ?? null
+    const limiteMax = parametro?.limiteMax ?? null
+    const unidad = parametro?.unidad ?? null
     const fieldValues = items
       .map(item => item[descriptor.field])
       .filter(value => value !== null && value !== undefined && String(value).trim() !== '')
 
+    const calculatedValue = calculateValue(rule, fieldValues)
+
     return {
-      calculatedValue: calculateValue(rule, fieldValues),
+      calculatedValue,
       codigoCabecera: descriptor.field,
       field: descriptor.field,
       group: descriptor.group,
       itemCount: fieldValues.length,
       label: descriptor.label,
-      rule
+      rule,
+      cumple: evaluateCompliance(calculatedValue, limiteMin, limiteMax),
+      limiteLabel: formatLimit(limiteMin, limiteMax, unidad),
+      unidad,
+      norma: parametro?.norma ?? null
     }
   })
 

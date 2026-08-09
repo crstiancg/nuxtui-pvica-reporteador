@@ -296,10 +296,10 @@ const submit = () => emit('submit', {
             v-model="state.centroId"
             endpoint="/api/centros"
             :initial-items="centroInitialItems"
-            :label-fields="['distrito', 'codigoUbigeo']"
-            :description-fields="['departamento', 'provincia']"
-            :search-fields="['distrito', 'codigoUbigeo', 'departamento', 'provincia']"
-            placeholder="Buscar centro..."
+            :label-fields="['nombreCentroPoblado', 'distrito']"
+            :description-fields="['provincia', 'codigoUbigeo']"
+            :search-fields="['nombreCentroPoblado', 'distrito', 'codigoUbigeo', 'departamento', 'provincia']"
+            placeholder="Buscar centro poblado..."
           />
         </UFormField>
 

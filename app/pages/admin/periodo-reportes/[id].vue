@@ -18,6 +18,7 @@ if (!Number.isInteger(periodoId) || periodoId <= 0) {
 
 const search = ref('')
 const debouncedSearch = ref('')
+const selectedCentroId = ref<number | null>(null)
 const page = ref(1)
 const perPage = ref(10)
 const isFormModalOpen = ref(false)
@@ -36,7 +37,7 @@ let searchDebounceTimer: ReturnType<typeof setTimeout> | undefined
 
 const { data: periodoData } = await useFetch<{ data: Periodo }>(`/api/periodos/${periodoId}`)
 const { data, pending, refresh } = await useFetch<ReportesResponse>('/api/reportes', {
-  query: { periodoId, search: debouncedSearch, page, perPage }
+  query: { periodoId, centroId: selectedCentroId, search: debouncedSearch, page, perPage }
 })
 const { data: centrosData, refresh: refreshCentros } = await useFetch<CentrosResponse>('/api/centros', {
   query: { page: 1, perPage: 100 }
@@ -62,7 +63,19 @@ watch(search, (value) => {
 watch(perPage, () => {
   page.value = 1
 })
+
+watch(selectedCentroId, () => {
+  page.value = 1
+})
+
 onBeforeUnmount(() => clearTimeout(searchDebounceTimer))
+
+const hasActiveFilters = computed(() => Boolean(selectedCentroId.value || search.value))
+
+const clearFilters = () => {
+  selectedCentroId.value = null
+  search.value = ''
+}
 
 const openCreateModal = async () => {
   editingReporte.value = null
@@ -216,22 +229,55 @@ const importExcel = async (payload: { file: File, mode: 'append' | 'replace' }) 
 
     <template #body>
       <div class="flex flex-col gap-6 w-full lg:max-w-6xl mx-auto">
-        <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 class="text-2xl font-semibold">
-              Reportes del periodo {{ periodoLabel }}
-            </h1>
-            <p class="text-muted">
-              Registra centros del mes y sus items de medicion correspondientes.
-            </p>
-          </div>
-          <UInput
-            v-model="search"
-            icon="i-lucide-search"
-            placeholder="Buscar centro o valor..."
-            class="sm:w-72"
-          />
+        <div>
+          <h1 class="text-2xl font-semibold">
+            Reportes del periodo {{ periodoLabel }}
+          </h1>
+          <p class="text-muted">
+            Registra centros del mes y sus items de medicion correspondientes.
+          </p>
         </div>
+
+        <UCard variant="subtle">
+          <div class="flex flex-wrap items-end gap-3">
+            <UFormField
+              label="Centro"
+              class="w-full sm:w-64"
+            >
+              <AsyncSelect
+                v-model="selectedCentroId"
+                endpoint="/api/centros"
+                :initial-items="centros"
+                :label-fields="['nombreCentroPoblado', 'distrito']"
+                :description-fields="['provincia', 'codigoUbigeo']"
+                :search-fields="['nombreCentroPoblado', 'distrito', 'codigoUbigeo', 'departamento', 'provincia']"
+                placeholder="Filtrar por centro..."
+                icon="i-lucide-map-pin"
+              />
+            </UFormField>
+
+            <UFormField
+              label="Buscar"
+              class="w-full sm:flex-1 sm:min-w-56"
+            >
+              <UInput
+                v-model="search"
+                icon="i-lucide-search"
+                placeholder="Buscar centro o valor..."
+                class="w-full"
+              />
+            </UFormField>
+
+            <UButton
+              v-if="hasActiveFilters"
+              label="Limpiar filtros"
+              icon="i-lucide-x"
+              color="neutral"
+              variant="ghost"
+              @click="clearFilters"
+            />
+          </div>
+        </UCard>
 
         <ReportesTable
           v-model:page="page"

@@ -10,6 +10,8 @@ const toast = useAppToast()
 const { can } = usePermissions()
 const search = ref('')
 const debouncedSearch = ref('')
+const selectedPeriodoId = ref<number | null>(null)
+const selectedCentroId = ref<number | null>(null)
 const page = ref(1)
 const perPage = ref(10)
 const isFormModalOpen = ref(false)
@@ -23,7 +25,7 @@ const deletingReporte = ref<Reporte | null>(null)
 let searchDebounceTimer: ReturnType<typeof setTimeout> | undefined
 
 const { data, pending, refresh } = await useFetch<ReportesResponse>('/api/reportes', {
-  query: { search: debouncedSearch, page, perPage }
+  query: { periodoId: selectedPeriodoId, centroId: selectedCentroId, search: debouncedSearch, page, perPage }
 })
 const { data: periodosData, refresh: refreshPeriodos } = await useFetch<PeriodosResponse>('/api/periodos', {
   query: { page: 1, perPage: 100 }
@@ -37,6 +39,14 @@ const centros = computed(() => centrosData.value?.data ?? [])
 const periodos = computed(() => periodosData.value?.data ?? [])
 const total = computed(() => data.value?.meta.total ?? 0)
 
+const periodoOptions = computed(() => [
+  { label: 'Todos los periodos', value: null },
+  ...periodos.value.map(periodo => ({
+    label: `${periodo.anio}-${String(periodo.mes).padStart(2, '0')}`,
+    value: periodo.id
+  }))
+])
+
 watch(search, (value) => {
   clearTimeout(searchDebounceTimer)
   searchDebounceTimer = setTimeout(() => {
@@ -47,7 +57,22 @@ watch(search, (value) => {
 watch(perPage, () => {
   page.value = 1
 })
+
+watch([selectedPeriodoId, selectedCentroId], () => {
+  page.value = 1
+})
+
 onBeforeUnmount(() => clearTimeout(searchDebounceTimer))
+
+const hasActiveFilters = computed(() =>
+  Boolean(selectedPeriodoId.value || selectedCentroId.value || search.value)
+)
+
+const clearFilters = () => {
+  selectedPeriodoId.value = null
+  selectedCentroId.value = null
+  search.value = ''
+}
 
 const openCreateModal = async () => {
   editingReporte.value = null
@@ -130,22 +155,69 @@ const deleteReporte = async () => {
     </template>
     <template #body>
       <div class="flex flex-col gap-6 w-full lg:max-w-6xl mx-auto">
-        <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 class="text-2xl font-semibold">
-              Gestion de reportes
-            </h1>
-            <p class="text-muted">
-              Administra cabeceras mensuales por centro y sus items de medicion.
-            </p>
-          </div>
-          <UInput
-            v-model="search"
-            icon="i-lucide-search"
-            placeholder="Buscar centro, periodo o valor..."
-            class="sm:w-72"
-          />
+        <div>
+          <h1 class="text-2xl font-semibold">
+            Gestion de reportes
+          </h1>
+          <p class="text-muted">
+            Administra cabeceras mensuales por centro y sus items de medicion.
+          </p>
         </div>
+
+        <UCard variant="subtle">
+          <div class="flex flex-wrap items-end gap-3">
+            <UFormField
+              label="Periodo"
+              class="w-full sm:w-44"
+            >
+              <USelect
+                v-model="selectedPeriodoId"
+                :items="periodoOptions"
+                label-key="label"
+                value-key="value"
+                class="w-full"
+              />
+            </UFormField>
+
+            <UFormField
+              label="Centro"
+              class="w-full sm:w-64"
+            >
+              <AsyncSelect
+                v-model="selectedCentroId"
+                endpoint="/api/centros"
+                :initial-items="centros"
+                :label-fields="['nombreCentroPoblado', 'distrito']"
+                :description-fields="['provincia', 'codigoUbigeo']"
+                :search-fields="['nombreCentroPoblado', 'distrito', 'codigoUbigeo', 'departamento', 'provincia']"
+                placeholder="Filtrar por centro..."
+                icon="i-lucide-map-pin"
+              />
+            </UFormField>
+
+            <UFormField
+              label="Buscar"
+              class="w-full sm:flex-1 sm:min-w-56"
+            >
+              <UInput
+                v-model="search"
+                icon="i-lucide-search"
+                placeholder="Buscar centro, periodo o valor..."
+                class="w-full"
+              />
+            </UFormField>
+
+            <UButton
+              v-if="hasActiveFilters"
+              label="Limpiar filtros"
+              icon="i-lucide-x"
+              color="neutral"
+              variant="ghost"
+              @click="clearFilters"
+            />
+          </div>
+        </UCard>
+
         <ReportesTable
           v-model:page="page"
           v-model:per-page="perPage"

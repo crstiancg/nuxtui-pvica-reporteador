@@ -3,23 +3,42 @@ const props = defineProps<{
   data: { label: string, totalReportes: number }[]
 }>()
 
-const width = 640
+const minColumnWidth = 64
 const height = 220
 const padLeft = 8
 const padRight = 8
 const padTop = 28
 const padBottom = 26
 const barGap = 12
-
-const innerWidth = width - padLeft - padRight
-const innerHeight = height - padTop - padBottom
 const minBarHeight = 4
+
+const wrapperRef = ref<HTMLElement>()
+const containerWidth = ref(0)
+let resizeObserver: ResizeObserver | undefined
+
+onMounted(() => {
+  if (!wrapperRef.value) return
+
+  resizeObserver = new ResizeObserver((entries) => {
+    containerWidth.value = entries[0]?.contentRect.width ?? 0
+  })
+  resizeObserver.observe(wrapperRef.value)
+})
+
+onBeforeUnmount(() => {
+  resizeObserver?.disconnect()
+})
+
+const minRequiredWidth = computed(() => (props.data.length || 1) * minColumnWidth)
+const width = computed(() => Math.max(minRequiredWidth.value, containerWidth.value))
+const innerWidth = computed(() => width.value - padLeft - padRight)
+const innerHeight = height - padTop - padBottom
 
 const maxValue = computed(() => Math.max(1, ...props.data.map(item => item.totalReportes)))
 
 const barWidth = computed(() => {
   const count = props.data.length || 1
-  return Math.max(6, (innerWidth - barGap * (count - 1)) / count)
+  return Math.max(6, (innerWidth.value - barGap * (count - 1)) / count)
 })
 
 const bars = computed(() => props.data.map((item, index) => {
@@ -30,24 +49,17 @@ const bars = computed(() => props.data.map((item, index) => {
 
   return { x, y, barHeight, ...item }
 }))
-
-const visibleLabelIndexes = computed(() => {
-  const total = props.data.length
-  if (total <= 8) {
-    return new Set(props.data.map((_, index) => index))
-  }
-
-  const step = Math.ceil(total / 8)
-  return new Set(props.data.map((_, index) => index).filter(index => index % step === 0 || index === total - 1))
-})
 </script>
 
 <template>
-  <div class="w-full overflow-x-auto">
+  <div
+    ref="wrapperRef"
+    class="w-full overflow-x-auto"
+  >
     <svg
       :viewBox="`0 0 ${width} ${height}`"
-      class="w-full h-auto min-w-[420px]"
-      preserveAspectRatio="none"
+      :style="{ width: `${width}px` }"
+      class="h-auto"
     >
       <line
         :x1="padLeft"
@@ -58,7 +70,7 @@ const visibleLabelIndexes = computed(() => {
         stroke-width="1"
       />
 
-      <g v-for="(bar, index) in bars" :key="bar.label">
+      <g v-for="bar in bars" :key="bar.label">
         <rect
           :x="bar.x"
           :y="bar.y"
@@ -80,7 +92,6 @@ const visibleLabelIndexes = computed(() => {
         </text>
 
         <text
-          v-if="visibleLabelIndexes.has(index)"
           :x="bar.x + barWidth / 2"
           :y="height - 6"
           text-anchor="middle"

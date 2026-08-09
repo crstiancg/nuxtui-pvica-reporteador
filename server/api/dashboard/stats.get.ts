@@ -9,7 +9,8 @@ export default eventHandler(async (event) => {
     totalPeriodos,
     totalReportes,
     totalItems,
-    latestPeriodo,
+    latestPeriodoConReportes,
+    latestPeriodoAbsoluto,
     periodosRecientes,
     periodosTrend,
     departamentos
@@ -18,6 +19,25 @@ export default eventHandler(async (event) => {
     prisma.periodo.count(),
     prisma.reporte.count(),
     prisma.reporteItem.count(),
+    prisma.periodo.findFirst({
+      where: {
+        reportes: {
+          some: {}
+        }
+      },
+      include: {
+        _count: {
+          select: {
+            reportes: true
+          }
+        }
+      },
+      orderBy: [
+        { reportes: { _count: 'desc' } },
+        { anio: 'desc' },
+        { mes: 'desc' }
+      ]
+    }),
     prisma.periodo.findFirst({
       include: {
         _count: {
@@ -73,15 +93,49 @@ export default eventHandler(async (event) => {
     })
   ])
 
-  const latestPeriodoStats = latestPeriodo
-    ? await prisma.reporteItem.count({
-        where: {
-          reporte: {
-            periodoId: latestPeriodo.id
+  const latestPeriodo = latestPeriodoConReportes ?? latestPeriodoAbsoluto
+
+  const [latestPeriodoItems, provinciaTotales, reportesDelPeriodo] = latestPeriodo
+    ? await Promise.all([
+        prisma.reporteItem.count({
+          where: {
+            reporte: {
+              periodoId: latestPeriodo.id
+            }
           }
-        }
-      })
-    : 0
+        }),
+        prisma.centro.groupBy({
+          by: ['provincia'],
+          _count: { _all: true }
+        }),
+        prisma.reporte.findMany({
+          where: { periodoId: latestPeriodo.id },
+          select: { centro: { select: { provincia: true } } }
+        })
+      ])
+    : [0, [], []]
+
+  const reportadosPorProvincia = new Map<string, number>()
+  for (const reporte of reportesDelPeriodo) {
+    const provincia = reporte.centro.provincia
+    reportadosPorProvincia.set(provincia, (reportadosPorProvincia.get(provincia) ?? 0) + 1)
+  }
+
+  const coberturaPorProvincia = provinciaTotales
+    .map((item) => {
+      const provinciaTotal = typeof item._count === 'object' && item._count && '_all' in item._count
+        ? item._count._all ?? 0
+        : 0
+      const centrosReportados = reportadosPorProvincia.get(item.provincia) ?? 0
+
+      return {
+        provincia: item.provincia,
+        totalCentros: provinciaTotal,
+        centrosReportados,
+        porcentaje: provinciaTotal > 0 ? Math.round((centrosReportados / provinciaTotal) * 1000) / 10 : 0
+      }
+    })
+    .sort((a, b) => b.porcentaje - a.porcentaje)
 
   return {
     summary: {
@@ -95,7 +149,13 @@ export default eventHandler(async (event) => {
           id: latestPeriodo.id,
           label: `${latestPeriodo.anio}-${String(latestPeriodo.mes).padStart(2, '0')}`,
           totalReportes: latestPeriodo._count.reportes,
-          totalItems: latestPeriodoStats
+          totalItems: latestPeriodoItems,
+          centrosReportados: latestPeriodo._count.reportes,
+          totalCentros,
+          coberturaPorcentaje: totalCentros > 0
+            ? Math.round((latestPeriodo._count.reportes / totalCentros) * 1000) / 10
+            : 0,
+          coberturaPorProvincia
         }
       : null,
     recentPeriodos: periodosRecientes.map(periodo => ({
